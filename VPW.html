@@ -618,7 +618,8 @@ function calcPensionPV(pension, currentAge, depletionAge, realReturn, inflation)
 
 // Compute the full VPW breakdown for a given portfolio value
 // Bridge cost = max(0, startAge - currentAge) * effectiveAnnual
-// Eff. Annual = monthly*12 for COLA, monthly*12 * 66.67% for non-COLA
+// Eff. Annual: COLA = monthly*12, non-COLA = monthly*12 * 65.7% / (1+inf)^gapYears
+// Pension income only counts when startAge <= currentAge
 function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   var realReturn = getRealReturn(stockPct);
   var yearsRemaining = Math.max(1, depletion - age);
@@ -628,19 +629,31 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   var pensionDetails = [];
   var totalRawBridgeCost = 0;
   var totalEffectiveAnnual = 0;
+  var hasReceiving = false;
 
   for (var i = 0; i < pensions.length; i++) {
     var p = pensions[i];
     var annualPayment = p.monthly * 12;
-    var effectiveAnnual = p.cola ? annualPayment : annualPayment * 0.6667;
     var gapYears = Math.max(0, p.startAge - age);
+    var isReceiving = p.startAge <= age;
+    var effectiveAnnual;
+
+    if (p.cola) {
+      effectiveAnnual = annualPayment;
+    } else {
+      // 65.7% base rate, inflation-adjusted for deferred pensions
+      effectiveAnnual = annualPayment * 0.657 / Math.pow(1 + inflation, gapYears);
+    }
+
     var rawBridgeCost = gapYears * effectiveAnnual;
+    if (isReceiving) hasReceiving = true;
 
     pensionDetails.push({
       name: p.name,
       annualPayment: annualPayment,
       effectiveAnnual: effectiveAnnual,
       rawBridgeCost: rawBridgeCost,
+      isReceiving: isReceiving,
       cola: p.cola
     });
     totalRawBridgeCost += rawBridgeCost;
@@ -650,12 +663,13 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   // Funding ratio based on raw bridge costs
   var fundingRatio = totalRawBridgeCost > 0 ? Math.min(1.0, portfolio / totalRawBridgeCost) : 1.0;
 
-  // Second pass: apply funding ratio
+  // Second pass: apply funding ratio; only receiving pensions contribute income
   var totalEffectivePayment = 0;
   var totalEffectiveBridgeCost = 0;
   for (var j = 0; j < pensionDetails.length; j++) {
     pensionDetails[j].fundingRatio = fundingRatio;
-    pensionDetails[j].effectivePayment = pensionDetails[j].effectiveAnnual * fundingRatio;
+    pensionDetails[j].effectivePayment = pensionDetails[j].isReceiving
+      ? pensionDetails[j].effectiveAnnual * fundingRatio : 0;
     pensionDetails[j].effectiveBridgeCost = pensionDetails[j].rawBridgeCost * fundingRatio;
     totalEffectivePayment += pensionDetails[j].effectivePayment;
     totalEffectiveBridgeCost += pensionDetails[j].effectiveBridgeCost;
@@ -669,7 +683,7 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   // VPW withdrawal from remaining balance
   var vpwWithdrawal = balanceForVPW * vpwRate;
 
-  // Total income
+  // Total income = VPW withdrawal + receiving pension income only
   var totalIncome = vpwWithdrawal + totalEffectivePayment;
 
   return {
@@ -680,6 +694,7 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
     totalEffectiveBridgeCost: totalEffectiveBridgeCost,
     totalEffectiveAnnual: totalEffectiveAnnual,
     totalEffectivePayment: totalEffectivePayment,
+    hasReceiving: hasReceiving,
     fundingRatio: fundingRatio,
     balanceForVPW: balanceForVPW,
     bridgePct: bridgePct,
@@ -704,7 +719,7 @@ function calculate() {
   updateResults(bd.vpwWithdrawal, bd.totalEffectivePayment, bd.totalIncome);
   document.getElementById('infoDepletion').textContent = depletion;
   document.getElementById('pensionIncomeCard').style.display =
-    pensions.length > 0 ? 'block' : 'none';
+    bd.hasReceiving ? 'block' : 'none';
 
   // Update debug panel if visible
   if (debugVisible) {
