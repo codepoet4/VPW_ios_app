@@ -114,15 +114,16 @@ body {
   appearance: none; -webkit-appearance: none;
   padding-right: 4px; cursor: pointer;
 }
-.form-row .toggle {
+/* Toggle switch - shared base styles */
+.toggle {
   position: relative; width: 51px; height: 31px;
   background: #e9e9eb; border-radius: 16px;
   cursor: pointer; transition: background 0.3s;
   flex-shrink: 0;
   touch-action: manipulation;
 }
-.form-row .toggle.on { background: var(--green); }
-.form-row .toggle::after {
+.toggle.on { background: var(--green); }
+.toggle::after {
   content: ''; position: absolute;
   width: 27px; height: 27px; border-radius: 50%;
   background: white; top: 2px; left: 2px;
@@ -130,7 +131,7 @@ body {
   transition: transform 0.3s;
   pointer-events: none;
 }
-.form-row .toggle.on::after { transform: translateX(20px); }
+.toggle.on::after { transform: translateX(20px); }
 
 /* Portfolio input */
 .portfolio-input-wrap {
@@ -244,9 +245,16 @@ body {
   font-weight: 500; width: 100px; outline: none;
   font-family: inherit;
 }
+/* Smaller toggle variant for pension rows */
 .pension-row .toggle { width: 44px; height: 26px; border-radius: 13px; }
-.pension-row .toggle::after { width: 22px; height: 22px; }
+.pension-row .toggle::after { width: 22px; height: 22px; top: 2px; left: 2px; }
 .pension-row .toggle.on::after { transform: translateX(18px); }
+.pension-row .cola-label {
+  font-size: 12px; font-weight: 600; margin-left: 8px;
+  min-width: 28px;
+}
+.pension-row .cola-label.on { color: var(--green); }
+.pension-row .cola-label.off { color: var(--text3); }
 
 .add-pension-btn {
   width: 100%; padding: 14px;
@@ -259,6 +267,45 @@ body {
   touch-action: manipulation;
 }
 .add-pension-btn:active { background: #d0e4fd; }
+
+/* Export / Import buttons */
+.config-actions {
+  display: flex; gap: 10px; margin-top: 4px;
+}
+.config-btn {
+  flex: 1; padding: 12px;
+  border-radius: 10px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  -webkit-appearance: none; appearance: none;
+  touch-action: manipulation; border: none;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.config-btn.export { background: var(--accent); color: white; }
+.config-btn.import { background: var(--accent-light); color: var(--accent); }
+.config-btn:active { opacity: 0.8; }
+#importFileInput { display: none; }
+
+/* Export modal textarea */
+.modal-box textarea {
+  width: 100%; height: 150px; margin: 10px 0;
+  font-family: 'SF Mono', 'Menlo', monospace; font-size: 11px;
+  border: 1px solid var(--separator); border-radius: 8px;
+  padding: 10px; resize: none; color: var(--text2);
+  background: var(--bg);
+}
+.modal-actions {
+  display: flex; gap: 10px; margin-top: 12px;
+}
+.modal-actions button {
+  flex: 1; padding: 12px;
+  border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  -webkit-appearance: none; appearance: none;
+  touch-action: manipulation;
+}
+.modal-actions .btn-primary { background: var(--accent); color: white; }
+.modal-actions .btn-secondary { background: var(--separator); color: var(--text2); }
 
 /* Allocation slider */
 .alloc-slider-wrap {
@@ -474,6 +521,15 @@ input[type="range"]::-webkit-slider-thumb {
       <button class="add-pension-btn" id="addPensionBtn">+ Add Pension or Income</button>
     </div>
 
+    <div class="card">
+      <div class="card-title">Configuration</div>
+      <div class="config-actions">
+        <button class="config-btn export" id="exportBtn">Export</button>
+        <button class="config-btn import" id="importBtn">Import</button>
+        <input type="file" id="importFileInput" accept=".json">
+      </div>
+    </div>
+
     <div class="info-line" style="margin-top:12px; padding-bottom: 30px;">
       Pensions with COLA maintain purchasing power.<br>
       Non-COLA pensions are treated as fixed nominal payments.<br>
@@ -482,6 +538,19 @@ input[type="range"]::-webkit-slider-thumb {
 
   </div>
 
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-box">
+    <h2>Export Configuration</h2>
+    <p>Copy this JSON or use the buttons below to save your configuration.</p>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="exportCloseBtn">Close</button>
+      <button class="btn-primary" id="exportCopyBtn">Copy to Clipboard</button>
+    </div>
+  </div>
 </div>
 
 <!-- About Modal -->
@@ -679,11 +748,14 @@ function updatePension(index, field, value) {
 }
 
 function togglePensionCOLA(index, el) {
+  var label = document.querySelector('[data-cola-label="' + index + '"]');
   if (el.classList.contains('on')) {
     el.classList.remove('on');
+    if (label) { label.textContent = 'No'; label.className = 'cola-label off'; }
     updatePension(index, 'cola', false);
   } else {
     el.classList.add('on');
+    if (label) { label.textContent = 'Yes'; label.className = 'cola-label on'; }
     updatePension(index, 'cola', true);
   }
 }
@@ -714,8 +786,11 @@ function renderPensions() {
         ' inputmode="numeric" data-field="startAge" data-index="' + i + '">' +
       '</div>' +
       '<div class="pension-row">' +
-        '<label>COLA (inflation adj.)</label>' +
-        '<div class="toggle ' + (p.cola ? 'on' : '') + '" data-cola="' + i + '"></div>' +
+        '<label>Inflation Adjusted</label>' +
+        '<div style="display:flex;align-items:center;">' +
+          '<div class="toggle ' + (p.cola ? 'on' : '') + '" data-cola="' + i + '"></div>' +
+          '<span class="cola-label ' + (p.cola ? 'on' : 'off') + '" data-cola-label="' + i + '">' + (p.cola ? 'Yes' : 'No') + '</span>' +
+        '</div>' +
       '</div>';
     container.appendChild(card);
   }
@@ -812,6 +887,77 @@ function loadSettings() {
 }
 
 // ==========================================
+// Export / Import
+// ==========================================
+
+function exportConfig() {
+  var settings = {
+    age: parseInt(document.getElementById('settAge').value) || 65,
+    depletionAge: parseInt(document.getElementById('settDepletion').value) || 100,
+    stockAllocation: parseInt(document.getElementById('settAlloc').value) || 60,
+    inflationRate: parseFloat(document.getElementById('settInflation').value) || 2.5,
+    portfolioValue: document.getElementById('portfolioValue').value,
+    pensions: pensions
+  };
+  var json = JSON.stringify(settings, null, 2);
+  document.getElementById('exportText').value = json;
+  document.getElementById('exportModal').classList.add('visible');
+}
+
+function copyExport() {
+  var textarea = document.getElementById('exportText');
+  textarea.select();
+  textarea.setSelectionRange(0, 99999);
+  try {
+    navigator.clipboard.writeText(textarea.value).then(function() {
+      document.getElementById('exportCopyBtn').textContent = 'Copied!';
+      setTimeout(function() {
+        document.getElementById('exportCopyBtn').textContent = 'Copy to Clipboard';
+      }, 2000);
+    });
+  } catch(e) {
+    document.execCommand('copy');
+    document.getElementById('exportCopyBtn').textContent = 'Copied!';
+    setTimeout(function() {
+      document.getElementById('exportCopyBtn').textContent = 'Copy to Clipboard';
+    }, 2000);
+  }
+}
+
+function importConfig() {
+  document.getElementById('importFileInput').click();
+}
+
+function handleImportFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (data.age !== undefined) document.getElementById('settAge').value = data.age;
+      if (data.depletionAge !== undefined) document.getElementById('settDepletion').value = data.depletionAge;
+      if (data.stockAllocation !== undefined) {
+        document.getElementById('settAlloc').value = data.stockAllocation;
+        onAllocChange(document.getElementById('settAlloc'));
+      }
+      if (data.inflationRate !== undefined) document.getElementById('settInflation').value = data.inflationRate;
+      if (data.portfolioValue !== undefined) document.getElementById('portfolioValue').value = data.portfolioValue;
+      if (data.pensions) pensions = data.pensions;
+      renderPensions();
+      saveAndCalc();
+    } catch(err) {
+      var m = document.getElementById('aboutModal');
+      m.querySelector('h2').textContent = 'Import Error';
+      m.querySelector('.modal-box').innerHTML =
+        '<h2>Import Error</h2><p>Could not read the file. Make sure it is a valid VPW config JSON file.</p>' +
+        '<button class="modal-close-btn" id="modalCloseBtn">OK</button>';
+      m.classList.add('visible');
+      document.getElementById('modalCloseBtn').addEventListener('click', hideAbout);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ==========================================
 // Event Binding (all via addEventListener for iOS reliability)
 // ==========================================
 
@@ -850,6 +996,23 @@ function init() {
 
   // Add pension button
   document.getElementById('addPensionBtn').addEventListener('click', function() { addPension(); });
+
+  // Export / Import
+  document.getElementById('exportBtn').addEventListener('click', exportConfig);
+  document.getElementById('importBtn').addEventListener('click', importConfig);
+  document.getElementById('exportCopyBtn').addEventListener('click', copyExport);
+  document.getElementById('exportCloseBtn').addEventListener('click', function() {
+    document.getElementById('exportModal').classList.remove('visible');
+  });
+  document.getElementById('exportModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('visible');
+  });
+  document.getElementById('importFileInput').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      handleImportFile(e.target.files[0]);
+      e.target.value = '';
+    }
+  });
 
   // Delegated events for pension list (handles dynamically created elements)
   document.getElementById('pensionList').addEventListener('click', function(e) {
