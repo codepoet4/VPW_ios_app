@@ -402,7 +402,7 @@ input[type="range"]::-webkit-slider-thumb {
 <body>
 
 <div class="header">
-  <h1>VPW Calculator</h1>
+  <h1 id="headerTitle" style="cursor:pointer;">VPW Calculator</h1>
   <div class="header-btns">
     <button class="header-btn" id="debugBtn" aria-label="Debug" style="font-size:14px;font-weight:700;">D</button>
     <button class="header-btn" id="aboutBtn" aria-label="Info">?</button>
@@ -1221,6 +1221,12 @@ function init() {
   loadSettings();
   renderPensions();
   onAllocChange(document.getElementById('settAlloc'));
+
+  document.getElementById('headerTitle').addEventListener('click', function() {
+    if (document.getElementById('page-calc').classList.contains('active')) {
+      location.reload();
+    }
+  });
 
   document.getElementById('tabCalc').addEventListener('click', function() { switchTab('calc'); });
   document.getElementById('tabSettings').addEventListener('click', function() { switchTab('settings'); });
