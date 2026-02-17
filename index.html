@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VPW Calc">
+<title>VPW Withdrawal Calculator</title>
+<style>
+:root {
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --accent: #007aff;
+  --accent-light: #e8f0fe;
+  --green: #34c759;
+  --green-bg: #eafaf0;
+  --orange: #ff9500;
+  --red: #ff3b30;
+  --text: #1c1c1e;
+  --text2: #3a3a3c;
+  --text3: #8e8e93;
+  --separator: #e5e5ea;
+  --radius: 14px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(242,242,247,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 12px 20px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 0.5px solid var(--separator);
+}
+.header h1 { font-size: 20px; font-weight: 700; }
+.header-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--accent-light); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--accent); font-size: 18px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 0; padding: 12px 20px 0;
+}
+.tab {
+  flex: 1; padding: 10px; text-align: center;
+  font-size: 14px; font-weight: 600;
+  background: var(--card); border: 1.5px solid var(--separator);
+  cursor: pointer; color: var(--text3); transition: all 0.2s;
+}
+.tab:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.tab:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Content */
+.content { padding: 16px 20px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card-title {
+  font-size: 13px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* Form rows */
+.form-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--separator);
+}
+.form-row:last-child { border-bottom: none; }
+.form-row label {
+  font-size: 16px; color: var(--text);
+  flex-shrink: 0; margin-right: 12px;
+}
+.form-row input, .form-row select {
+  font-size: 16px; text-align: right;
+  border: none; background: transparent;
+  color: var(--accent); font-weight: 500;
+  width: 120px; outline: none;
+  font-family: inherit;
+}
+.form-row select {
+  appearance: none; -webkit-appearance: none;
+  padding-right: 4px; cursor: pointer;
+}
+.form-row .toggle {
+  position: relative; width: 51px; height: 31px;
+  background: #e9e9eb; border-radius: 16px;
+  cursor: pointer; transition: background 0.3s;
+  flex-shrink: 0;
+}
+.form-row .toggle.on { background: var(--green); }
+.form-row .toggle::after {
+  content: ''; position: absolute;
+  width: 27px; height: 27px; border-radius: 50%;
+  background: white; top: 2px; left: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  transition: transform 0.3s;
+}
+.form-row .toggle.on::after { transform: translateX(20px); }
+
+/* Portfolio input */
+.portfolio-input-wrap {
+  position: relative; margin-bottom: 6px;
+}
+.portfolio-input-wrap .currency {
+  position: absolute; left: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 28px; font-weight: 300; color: var(--text3);
+}
+.portfolio-input {
+  width: 100%; padding: 18px 16px 18px 36px;
+  font-size: 32px; font-weight: 600;
+  border: 2px solid var(--separator);
+  border-radius: 12px; outline: none;
+  font-family: inherit; color: var(--text);
+  transition: border-color 0.2s;
+  background: white;
+}
+.portfolio-input:focus { border-color: var(--accent); }
+.portfolio-input::placeholder { color: #c7c7cc; font-weight: 400; }
+
+/* VPW Rate badge */
+.vpw-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent-light);
+  padding: 8px 14px; border-radius: 20px;
+  font-size: 14px; font-weight: 600; color: var(--accent);
+  margin-top: 8px;
+}
+.vpw-badge .rate { font-size: 18px; }
+
+/* Result rows */
+.result-section { margin-bottom: 8px; }
+.result-label {
+  font-size: 13px; color: var(--text3);
+  font-weight: 500; margin-bottom: 4px;
+}
+.result-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.result-cell {
+  text-align: center; padding: 10px 4px;
+  background: var(--bg); border-radius: 10px;
+}
+.result-cell .freq {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+.result-cell .amount {
+  font-size: 17px; font-weight: 700; color: var(--text);
+}
+.result-cell .amount.small { font-size: 14px; }
+
+/* Total income highlight */
+.card.total-card {
+  background: linear-gradient(135deg, #007aff, #5856d6);
+  color: white;
+}
+.card.total-card .card-title { color: rgba(255,255,255,0.7); }
+.card.total-card .result-cell { background: rgba(255,255,255,0.15); }
+.card.total-card .result-cell .freq { color: rgba(255,255,255,0.7); }
+.card.total-card .result-cell .amount { color: white; }
+
+/* Info line */
+.info-line {
+  font-size: 12px; color: var(--text3);
+  text-align: center; margin-top: 4px;
+  padding: 0 8px;
+}
+
+/* Pension cards */
+.pension-card {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.pension-card .pension-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.pension-card .pension-name-input {
+  font-size: 16px; font-weight: 600;
+  border: none; background: transparent;
+  color: var(--text); outline: none;
+  width: 60%; font-family: inherit;
+}
+.pension-card .pension-name-input::placeholder { color: var(--text3); }
+.delete-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,59,48,0.12); border: none;
+  color: var(--red); font-size: 16px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.pension-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-top: 0.5px solid var(--separator);
+}
+.pension-row label { font-size: 14px; color: var(--text2); }
+.pension-row input {
+  font-size: 14px; text-align: right; border: none;
+  background: transparent; color: var(--accent);
+  font-weight: 500; width: 100px; outline: none;
+  font-family: inherit;
+}
+.pension-row .toggle { width: 44px; height: 26px; border-radius: 13px; }
+.pension-row .toggle::after { width: 22px; height: 22px; }
+.pension-row .toggle.on::after { transform: translateX(18px); }
+
+.add-pension-btn {
+  width: 100%; padding: 14px;
+  background: var(--accent-light);
+  color: var(--accent); border: 2px dashed #b4d5fe;
+  border-radius: 12px; font-size: 15px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.2s;
+}
+.add-pension-btn:active { background: #d0e4fd; }
+
+/* Allocation slider */
+.alloc-slider-wrap {
+  padding: 8px 0;
+}
+.alloc-display {
+  display: flex; justify-content: space-between;
+  font-size: 13px; font-weight: 600; margin-bottom: 8px;
+}
+.alloc-display .stocks { color: var(--accent); }
+.alloc-display .bonds { color: var(--green); }
+input[type="range"] {
+  width: 100%; height: 6px;
+  -webkit-appearance: none; appearance: none;
+  background: linear-gradient(to right, var(--accent) var(--pct), var(--green) var(--pct));
+  border-radius: 3px; outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: white; border: 2px solid var(--accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+/* Animation */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.card { animation: fadeIn 0.3s ease; }
+
+/* No results state */
+.no-value {
+  text-align: center; padding: 24px;
+  color: var(--text3); font-size: 15px;
+}
+
+/* Responsive adjustments for very small screens */
+@media (max-width: 350px) {
+  .portfolio-input { font-size: 26px; padding: 14px 12px 14px 30px; }
+  .portfolio-input-wrap .currency { font-size: 24px; left: 12px; }
+  .result-cell .amount { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VPW Calculator</h1>
+  <button class="header-btn" onclick="showAbout()" aria-label="Info">?</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('calc')">Calculator</div>
+  <div class="tab" onclick="switchTab('settings')">Settings</div>
+</div>
+
+<div class="content">
+
+  <!-- CALCULATOR PAGE -->
+  <div id="page-calc" class="page active">
+
+    <div class="card">
+      <div class="card-title">Portfolio Value</div>
+      <div class="portfolio-input-wrap">
+        <span class="currency">$</span>
+        <input type="text" class="portfolio-input" id="portfolioValue"
+               inputmode="numeric" placeholder="0"
+               oninput="onPortfolioInput(this)" onblur="formatPortfolioBlur(this)">
+      </div>
+      <div class="vpw-badge">
+        <span>Age <span id="badgeAge">65</span></span>
+        <span>|</span>
+        <span><span id="badgeAlloc">60</span>/<span id="badgeAllocBond">40</span></span>
+        <span>|</span>
+        <span>VPW <span class="rate" id="badgeRate">0.0</span>%</span>
+      </div>
+    </div>
+
+    <div id="resultsArea">
+      <div class="card">
+        <div class="card-title">Portfolio Withdrawal</div>
+        <div class="result-grid">
+          <div class="result-cell">
+            <div class="freq">Monthly</div>
+            <div class="amount" id="pwMonthly">--</div>
+          </div>
+          <div class="result-cell">
+            <div class="freq">Quarterly</div>
+            <div class="amount" id="pwQuarterly">--</div>
+          </div>
+          <div class="result-cell">
+            <div class="freq">Annually</div>
+            <div class="amount" id="pwAnnually">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="pensionIncomeCard" style="display:none;">
+        <div class="card-title">Pension Income</div>
+        <div class="result-grid">
+          <div class="result-cell">
+            <div class="freq">Monthly</div>
+            <div class="amount" id="piMonthly">--</div>
+          </div>
+          <div class="result-cell">
+            <div class="freq">Quarterly</div>
+            <div class="amount" id="piQuarterly">--</div>
+          </div>
+          <div class="result-cell">
+            <div class="freq">Annually</div>
+            <div class="amount" id="piAnnually">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card total-card">
+        <div class="card-title">Total Income</div>
+        <div class="result-grid">
+          <div class="result-cell">
+            <div class="freq">Monthly</div>
+            <div class="amount" id="tiMonthly">--</div>
+          </div>
+          <div class="result-cell">
+            <div class="freq">Quarterly</div>
+            <div class="amount" id="tiQuarterly">--</div>
+          </div>
+          <div class="result-cell">
+            <div class="freq">Annually</div>
+            <div class="amount" id="tiAnnually">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-line">
+        Based on Variable Percentage Withdrawal (VPW) methodology.
+        Portfolio depletes to $0 at age <span id="infoDepletion">100</span>.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div id="page-settings" class="page">
+
+    <div class="card">
+      <div class="card-title">Personal</div>
+      <div class="form-row">
+        <label>Current Age</label>
+        <input type="number" id="settAge" value="65" min="30" max="99"
+               inputmode="numeric" onchange="saveAndCalc()">
+      </div>
+      <div class="form-row">
+        <label>Depletion Age</label>
+        <input type="number" id="settDepletion" value="100" min="80" max="110"
+               inputmode="numeric" onchange="saveAndCalc()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Portfolio Allocation</div>
+      <div class="alloc-slider-wrap">
+        <div class="alloc-display">
+          <span class="stocks">Stocks: <span id="stockPct">60</span>%</span>
+          <span class="bonds">Bonds: <span id="bondPct">40</span>%</span>
+        </div>
+        <input type="range" id="settAlloc" min="0" max="100" step="5" value="60"
+               oninput="onAllocChange(this)" onchange="saveAndCalc()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Assumptions</div>
+      <div class="form-row">
+        <label>Inflation Rate (%)</label>
+        <input type="number" id="settInflation" value="2.5" min="0" max="10" step="0.1"
+               inputmode="decimal" onchange="saveAndCalc()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Pensions &amp; Income</div>
+      <div id="pensionList"></div>
+      <button class="add-pension-btn" onclick="addPension()">+ Add Pension or Income</button>
+    </div>
+
+    <div class="info-line" style="margin-top:12px; padding-bottom: 30px;">
+      Pensions with COLA maintain purchasing power.<br>
+      Non-COLA pensions are treated as fixed nominal payments.<br>
+      Update values at least once per year.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// VPW Calculator - Core Logic
+// ==========================================
+
+// Assumed real returns by stock allocation % (derived from Bogleheads VPW tables)
+const REAL_RETURNS = {
+  0: 0.0160, 5: 0.0176, 10: 0.0192, 15: 0.0209, 20: 0.0225,
+  25: 0.0250, 30: 0.0274, 35: 0.0285, 40: 0.0295, 45: 0.0310,
+  50: 0.0325, 55: 0.0340, 60: 0.0355, 65: 0.0370, 70: 0.0385,
+  75: 0.0403, 80: 0.0420, 85: 0.0438, 90: 0.0455, 95: 0.0473,
+  100: 0.0490
+};
+
+function getRealReturn(stockPct) {
+  stockPct = Math.max(0, Math.min(100, Math.round(stockPct / 5) * 5));
+  return REAL_RETURNS[stockPct] || 0.0355;
+}
+
+// PMT function: payment for annuity
+// Returns the fraction of PV to withdraw each period
+function calcVPWRate(realReturn, yearsRemaining) {
+  if (yearsRemaining <= 0) return 1.0;
+  if (yearsRemaining === 1) return 1.0;
+  if (realReturn === 0) return 1 / yearsRemaining;
+  const r = realReturn;
+  const n = yearsRemaining;
+  return r / (1 - Math.pow(1 + r, -n));
+}
+
+// Present value of annuity-due (payments at start of period)
+function annuityDuePV(rate, n) {
+  if (n <= 0) return 0;
+  if (rate === 0) return n;
+  return (1 + rate) / rate * (1 - Math.pow(1 + rate, -n));
+}
+
+// Calculate pension PV
+function calcPensionPV(pension, currentAge, depletionAge, realReturn, inflation) {
+  const annualPayment = pension.monthly * 12;
+  if (annualPayment <= 0) return { pv: 0, currentIncome: 0 };
+
+  const startAge = pension.startAge;
+  const hasCOLA = pension.cola;
+
+  // Determine discount rate
+  const rReal = realReturn;
+  const rNominal = (1 + rReal) * (1 + inflation) - 1;
+  const discountRate = hasCOLA ? rReal : rNominal;
+
+  let pv = 0;
+  let currentIncome = 0;
+
+  if (startAge <= currentAge) {
+    // Pension is active
+    currentIncome = annualPayment;
+    const yearsRemaining = Math.max(0, depletionAge - currentAge);
+    pv = annualPayment * annuityDuePV(discountRate, yearsRemaining);
+  } else {
+    // Future pension
+    const delay = startAge - currentAge;
+    const pensionYears = Math.max(0, depletionAge - startAge);
+    if (pensionYears > 0) {
+      pv = annualPayment * annuityDuePV(discountRate, pensionYears)
+           / Math.pow(1 + discountRate, delay);
+    }
+  }
+
+  return { pv, currentIncome };
+}
+
+// Main calculation
+function calculate() {
+  const age = parseInt(document.getElementById('settAge').value) || 65;
+  const depletion = parseInt(document.getElementById('settDepletion').value) || 100;
+  const stockPct = parseInt(document.getElementById('settAlloc').value) || 60;
+  const inflation = parseFloat(document.getElementById('settInflation').value) / 100 || 0.025;
+
+  const portfolioStr = document.getElementById('portfolioValue').value.replace(/[^0-9.]/g, '');
+  const portfolio = parseFloat(portfolioStr) || 0;
+
+  const realReturn = getRealReturn(stockPct);
+  const yearsRemaining = Math.max(1, depletion - age);
+  const vpwRate = calcVPWRate(realReturn, yearsRemaining);
+
+  // Cap at 100%
+  const vpwRateCapped = Math.min(vpwRate, 1.0);
+
+  // Calculate pension PVs
+  let totalPensionPV = 0;
+  let totalCurrentPensionIncome = 0;
+
+  pensions.forEach(p => {
+    const result = calcPensionPV(p, age, depletion, realReturn, inflation);
+    totalPensionPV += result.pv;
+    totalCurrentPensionIncome += result.currentIncome;
+  });
+
+  // Total wealth = portfolio + PV of future pensions
+  const totalWealth = portfolio + totalPensionPV;
+
+  // Annual spending from VPW
+  const annualSpending = totalWealth * vpwRateCapped;
+
+  // Portfolio withdrawal = total spending - current pension income
+  let annualPortfolioWithdrawal = annualSpending - totalCurrentPensionIncome;
+  // Floor at 0 (pensions might exceed VPW spending suggestion)
+  annualPortfolioWithdrawal = Math.max(0, annualPortfolioWithdrawal);
+
+  // Also floor at portfolio value (can't withdraw more than you have)
+  annualPortfolioWithdrawal = Math.min(annualPortfolioWithdrawal, portfolio);
+
+  const annualTotalIncome = annualPortfolioWithdrawal + totalCurrentPensionIncome;
+
+  // Update UI
+  updateBadge(age, stockPct, vpwRateCapped * 100);
+  updateResults(annualPortfolioWithdrawal, totalCurrentPensionIncome, annualTotalIncome);
+  document.getElementById('infoDepletion').textContent = depletion;
+
+  // Show/hide pension income card
+  document.getElementById('pensionIncomeCard').style.display =
+    pensions.length > 0 ? 'block' : 'none';
+}
+
+function updateBadge(age, stockPct, rate) {
+  document.getElementById('badgeAge').textContent = age;
+  document.getElementById('badgeAlloc').textContent = stockPct;
+  document.getElementById('badgeAllocBond').textContent = 100 - stockPct;
+  document.getElementById('badgeRate').textContent = rate.toFixed(1);
+}
+
+function formatCurrency(value) {
+  if (value >= 1000000) {
+    return '$' + (value / 1000).toLocaleString('en-US', { maximumFractionDigits: 0 }) .replace(/,/g, ',');
+  }
+  return '$' + Math.round(value).toLocaleString('en-US');
+}
+
+function updateResults(annualPW, annualPI, annualTI) {
+  const portfolioStr = document.getElementById('portfolioValue').value.replace(/[^0-9.]/g, '');
+  const hasValue = parseFloat(portfolioStr) > 0 || pensions.length > 0;
+
+  if (!hasValue) {
+    ['pwMonthly','pwQuarterly','pwAnnually','piMonthly','piQuarterly','piAnnually',
+     'tiMonthly','tiQuarterly','tiAnnually'].forEach(id => {
+      document.getElementById(id).textContent = '--';
+    });
+    return;
+  }
+
+  const setAmounts = (prefix, annual) => {
+    const monthly = annual / 12;
+    const quarterly = annual / 4;
+    const mEl = document.getElementById(prefix + 'Monthly');
+    const qEl = document.getElementById(prefix + 'Quarterly');
+    const aEl = document.getElementById(prefix + 'Annually');
+    mEl.textContent = formatCurrency(monthly);
+    qEl.textContent = formatCurrency(quarterly);
+    aEl.textContent = formatCurrency(annual);
+    // Add small class for large numbers
+    [mEl, qEl, aEl].forEach(el => {
+      el.classList.toggle('small', el.textContent.length > 8);
+    });
+  };
+
+  setAmounts('pw', annualPW);
+  setAmounts('pi', annualPI);
+  setAmounts('ti', annualTI);
+}
+
+// ==========================================
+// Pension Management
+// ==========================================
+
+let pensions = [];
+
+function addPension(data) {
+  const pension = data || {
+    name: 'Pension ' + (pensions.length + 1),
+    monthly: 0,
+    startAge: parseInt(document.getElementById('settAge').value) || 65,
+    cola: true
+  };
+  pensions.push(pension);
+  renderPensions();
+  saveAndCalc();
+}
+
+function removePension(index) {
+  pensions.splice(index, 1);
+  renderPensions();
+  saveAndCalc();
+}
+
+function updatePension(index, field, value) {
+  pensions[index][field] = value;
+  saveAndCalc();
+}
+
+function renderPensions() {
+  const container = document.getElementById('pensionList');
+  container.innerHTML = '';
+
+  pensions.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'pension-card';
+    card.innerHTML = `
+      <div class="pension-header">
+        <input type="text" class="pension-name-input" value="${escapeHtml(p.name)}"
+               placeholder="Pension name"
+               onchange="updatePension(${i}, 'name', this.value)">
+        <button class="delete-btn" onclick="removePension(${i})" aria-label="Delete">&times;</button>
+      </div>
+      <div class="pension-row">
+        <label>Monthly $</label>
+        <input type="text" value="${p.monthly > 0 ? p.monthly.toLocaleString('en-US') : ''}"
+               inputmode="numeric" placeholder="0"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+               onchange="updatePension(${i}, 'monthly', parseInt(this.value.replace(/[^0-9]/g,''))||0)">
+      </div>
+      <div class="pension-row">
+        <label>Start Age</label>
+        <input type="number" value="${p.startAge}" min="50" max="100"
+               inputmode="numeric"
+               onchange="updatePension(${i}, 'startAge', parseInt(this.value)||65)">
+      </div>
+      <div class="pension-row">
+        <label>COLA (inflation adj.)</label>
+        <div class="toggle ${p.cola ? 'on' : ''}"
+             onclick="this.classList.toggle('on'); updatePension(${i}, 'cola', this.classList.contains('on'))">
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ==========================================
+// UI Interactions
+// ==========================================
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  if (tab === 'calc') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('page-calc').classList.add('active');
+    calculate(); // Recalculate when switching to calculator
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('page-settings').classList.add('active');
+  }
+}
+
+function onAllocChange(slider) {
+  const val = parseInt(slider.value);
+  document.getElementById('stockPct').textContent = val;
+  document.getElementById('bondPct').textContent = 100 - val;
+  slider.style.setProperty('--pct', val + '%');
+}
+
+function onPortfolioInput(input) {
+  // Strip non-numeric except decimal
+  let raw = input.value.replace(/[^0-9]/g, '');
+  if (raw.length > 0) {
+    const num = parseInt(raw);
+    input.value = num.toLocaleString('en-US');
+  } else {
+    input.value = '';
+  }
+  calculate();
+}
+
+function formatPortfolioBlur(input) {
+  let raw = input.value.replace(/[^0-9]/g, '');
+  if (raw.length > 0) {
+    const num = parseInt(raw);
+    input.value = num.toLocaleString('en-US');
+  }
+}
+
+function saveAndCalc() {
+  saveSettings();
+  calculate();
+}
+
+// ==========================================
+// Persistence (localStorage)
+// ==========================================
+
+function saveSettings() {
+  const settings = {
+    age: document.getElementById('settAge').value,
+    depletion: document.getElementById('settDepletion').value,
+    alloc: document.getElementById('settAlloc').value,
+    inflation: document.getElementById('settInflation').value,
+    portfolio: document.getElementById('portfolioValue').value,
+    pensions: pensions
+  };
+  try {
+    localStorage.setItem('vpw-settings', JSON.stringify(settings));
+  } catch(e) {}
+}
+
+function loadSettings() {
+  try {
+    const data = JSON.parse(localStorage.getItem('vpw-settings'));
+    if (!data) return;
+
+    if (data.age) document.getElementById('settAge').value = data.age;
+    if (data.depletion) document.getElementById('settDepletion').value = data.depletion;
+    if (data.alloc) {
+      document.getElementById('settAlloc').value = data.alloc;
+      onAllocChange(document.getElementById('settAlloc'));
+    }
+    if (data.inflation) document.getElementById('settInflation').value = data.inflation;
+    if (data.portfolio) document.getElementById('portfolioValue').value = data.portfolio;
+    if (data.pensions) pensions = data.pensions;
+  } catch(e) {}
+}
+
+// ==========================================
+// About / Info
+// ==========================================
+
+function showAbout() {
+  alert(
+    'VPW Withdrawal Calculator\n\n' +
+    'Based on the Bogleheads Variable Percentage Withdrawal (VPW) methodology.\n\n' +
+    'How it works:\n' +
+    '1. Set your age, allocation, and pensions in Settings\n' +
+    '2. Enter your current portfolio value\n' +
+    '3. See your suggested withdrawal amounts\n\n' +
+    'Update your portfolio value at least once per year.\n\n' +
+    'The VPW rate increases with age, ensuring your portfolio is used efficiently through retirement while accounting for pension income.'
+  );
+}
+
+// ==========================================
+// Init
+// ==========================================
+
+function init() {
+  loadSettings();
+  renderPensions();
+  onAllocChange(document.getElementById('settAlloc'));
+  calculate();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
