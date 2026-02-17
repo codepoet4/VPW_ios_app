@@ -36,7 +36,6 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
-/* Header */
 .header {
   position: sticky; top: 0; z-index: 100;
   background: rgba(242,242,247,0.85);
@@ -47,6 +46,7 @@ body {
   border-bottom: 0.5px solid var(--separator);
 }
 .header h1 { font-size: 20px; font-weight: 700; }
+.header-btns { display: flex; gap: 8px; }
 .header-btn {
   width: 36px; height: 36px; border-radius: 50%;
   background: var(--accent-light); border: none;
@@ -55,8 +55,8 @@ body {
   -webkit-appearance: none; appearance: none;
   touch-action: manipulation;
 }
+.header-btn.debug-active { background: var(--orange); color: white; }
 
-/* Tabs - using <button> elements for iOS tap reliability */
 .tabs {
   display: flex; gap: 0; padding: 12px 20px 0;
 }
@@ -66,19 +66,16 @@ body {
   background: var(--card); border: 1.5px solid var(--separator);
   cursor: pointer; color: var(--text3); transition: all 0.2s;
   -webkit-appearance: none; appearance: none;
-  touch-action: manipulation;
-  font-family: inherit;
+  touch-action: manipulation; font-family: inherit;
 }
 .tab-btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
 .tab-btn:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
 .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-/* Content */
 .content { padding: 16px 20px; }
 .page { display: none; }
 .page.active { display: block; }
 
-/* Cards */
 .card {
   background: var(--card);
   border-radius: var(--radius);
@@ -92,7 +89,6 @@ body {
   margin-bottom: 12px;
 }
 
-/* Form rows */
 .form-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 0;
@@ -107,20 +103,14 @@ body {
   font-size: 16px; text-align: right;
   border: none; background: transparent;
   color: var(--accent); font-weight: 500;
-  width: 120px; outline: none;
-  font-family: inherit;
+  width: 120px; outline: none; font-family: inherit;
 }
-.form-row select {
-  appearance: none; -webkit-appearance: none;
-  padding-right: 4px; cursor: pointer;
-}
-/* Toggle switch - shared base styles */
+
 .toggle {
   position: relative; width: 51px; height: 31px;
   background: #e9e9eb; border-radius: 16px;
   cursor: pointer; transition: background 0.3s;
-  flex-shrink: 0;
-  touch-action: manipulation;
+  flex-shrink: 0; touch-action: manipulation;
 }
 .toggle.on { background: var(--green); }
 .toggle::after {
@@ -128,15 +118,11 @@ body {
   width: 27px; height: 27px; border-radius: 50%;
   background: white; top: 2px; left: 2px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-  transition: transform 0.3s;
-  pointer-events: none;
+  transition: transform 0.3s; pointer-events: none;
 }
 .toggle.on::after { transform: translateX(20px); }
 
-/* Portfolio input */
-.portfolio-input-wrap {
-  position: relative; margin-bottom: 6px;
-}
+.portfolio-input-wrap { position: relative; margin-bottom: 6px; }
 .portfolio-input-wrap .currency {
   position: absolute; left: 16px; top: 50%;
   transform: translateY(-50%);
@@ -149,13 +135,11 @@ body {
   border: 2px solid var(--separator);
   border-radius: 12px; outline: none;
   font-family: inherit; color: var(--text);
-  transition: border-color 0.2s;
-  background: white;
+  transition: border-color 0.2s; background: white;
 }
 .portfolio-input:focus { border-color: var(--accent); }
 .portfolio-input::placeholder { color: #c7c7cc; font-weight: 400; }
 
-/* VPW Rate badge */
 .vpw-badge {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--accent-light);
@@ -165,15 +149,8 @@ body {
 }
 .vpw-badge .rate { font-size: 18px; }
 
-/* Result rows */
-.result-section { margin-bottom: 8px; }
-.result-label {
-  font-size: 13px; color: var(--text3);
-  font-weight: 500; margin-bottom: 4px;
-}
 .result-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
 }
 .result-cell {
   text-align: center; padding: 10px 4px;
@@ -181,38 +158,27 @@ body {
 }
 .result-cell .freq {
   font-size: 11px; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 0.3px;
-  margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px;
 }
-.result-cell .amount {
-  font-size: 17px; font-weight: 700; color: var(--text);
-}
+.result-cell .amount { font-size: 17px; font-weight: 700; color: var(--text); }
 .result-cell .amount.small { font-size: 14px; }
 
-/* Total income highlight */
 .card.total-card {
-  background: linear-gradient(135deg, #007aff, #5856d6);
-  color: white;
+  background: linear-gradient(135deg, #007aff, #5856d6); color: white;
 }
 .card.total-card .card-title { color: rgba(255,255,255,0.7); }
 .card.total-card .result-cell { background: rgba(255,255,255,0.15); }
 .card.total-card .result-cell .freq { color: rgba(255,255,255,0.7); }
 .card.total-card .result-cell .amount { color: white; }
 
-/* Info line */
 .info-line {
   font-size: 12px; color: var(--text3);
-  text-align: center; margin-top: 4px;
-  padding: 0 8px;
+  text-align: center; margin-top: 4px; padding: 0 8px;
 }
 
-/* Pension cards */
 .pension-card {
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 10px;
-  position: relative;
+  background: var(--bg); border-radius: 12px;
+  padding: 14px; margin-bottom: 10px; position: relative;
 }
 .pension-card .pension-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -230,28 +196,23 @@ body {
   background: rgba(255,59,48,0.12); border: none;
   color: var(--red); font-size: 16px; font-weight: 700;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  -webkit-appearance: none; appearance: none;
-  touch-action: manipulation;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation;
 }
 .pension-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 0;
-  border-top: 0.5px solid var(--separator);
+  padding: 8px 0; border-top: 0.5px solid var(--separator);
 }
 .pension-row label { font-size: 14px; color: var(--text2); }
 .pension-row input {
   font-size: 14px; text-align: right; border: none;
   background: transparent; color: var(--accent);
-  font-weight: 500; width: 100px; outline: none;
-  font-family: inherit;
+  font-weight: 500; width: 100px; outline: none; font-family: inherit;
 }
-/* Smaller toggle variant for pension rows */
 .pension-row .toggle { width: 44px; height: 26px; border-radius: 13px; }
 .pension-row .toggle::after { width: 22px; height: 22px; top: 2px; left: 2px; }
 .pension-row .toggle.on::after { transform: translateX(18px); }
 .pension-row .cola-label {
-  font-size: 12px; font-weight: 600; margin-left: 8px;
-  min-width: 28px;
+  font-size: 12px; font-weight: 600; margin-left: 8px; min-width: 28px;
 }
 .pension-row .cola-label.on { color: var(--green); }
 .pension-row .cola-label.off { color: var(--text3); }
@@ -262,16 +223,11 @@ body {
   color: var(--accent); border: 2px dashed #b4d5fe;
   border-radius: 12px; font-size: 15px; font-weight: 600;
   cursor: pointer; font-family: inherit;
-  transition: background 0.2s;
-  -webkit-appearance: none; appearance: none;
-  touch-action: manipulation;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation;
 }
 .add-pension-btn:active { background: #d0e4fd; }
 
-/* Export / Import buttons */
-.config-actions {
-  display: flex; gap: 10px; margin-top: 4px;
-}
+.config-actions { display: flex; gap: 10px; margin-top: 4px; }
 .config-btn {
   flex: 1; padding: 12px;
   border-radius: 10px; font-size: 14px; font-weight: 600;
@@ -285,32 +241,23 @@ body {
 .config-btn:active { opacity: 0.8; }
 #importFileInput { display: none; }
 
-/* Export modal textarea */
 .modal-box textarea {
   width: 100%; height: 150px; margin: 10px 0;
   font-family: 'SF Mono', 'Menlo', monospace; font-size: 11px;
   border: 1px solid var(--separator); border-radius: 8px;
-  padding: 10px; resize: none; color: var(--text2);
-  background: var(--bg);
+  padding: 10px; resize: none; color: var(--text2); background: var(--bg);
 }
-.modal-actions {
-  display: flex; gap: 10px; margin-top: 12px;
-}
+.modal-actions { display: flex; gap: 10px; margin-top: 12px; }
 .modal-actions button {
-  flex: 1; padding: 12px;
-  border: none; border-radius: 10px;
+  flex: 1; padding: 12px; border: none; border-radius: 10px;
   font-size: 15px; font-weight: 600;
   cursor: pointer; font-family: inherit;
-  -webkit-appearance: none; appearance: none;
-  touch-action: manipulation;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation;
 }
 .modal-actions .btn-primary { background: var(--accent); color: white; }
 .modal-actions .btn-secondary { background: var(--separator); color: var(--text2); }
 
-/* Allocation slider */
-.alloc-slider-wrap {
-  padding: 8px 0;
-}
+.alloc-slider-wrap { padding: 8px 0; }
 .alloc-display {
   display: flex; justify-content: space-between;
   font-size: 13px; font-weight: 600; margin-bottom: 8px;
@@ -327,41 +274,24 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 28px; height: 28px; border-radius: 50%;
   background: white; border: 2px solid var(--accent);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;
 }
 
-/* Modal overlay */
 .modal-overlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 9999;
-  justify-content: center; align-items: center;
-  padding: 30px;
+  background: rgba(0,0,0,0.4); z-index: 9999;
+  justify-content: center; align-items: center; padding: 30px;
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
 }
 .modal-overlay.visible { display: flex; }
 .modal-box {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 24px;
-  max-width: 340px; width: 100%;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  text-align: center;
+  background: var(--card); border-radius: 16px;
+  padding: 24px; max-width: 340px; width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center;
 }
-.modal-box h2 {
-  font-size: 18px; font-weight: 700;
-  margin-bottom: 14px; color: var(--text);
-}
-.modal-box p {
-  font-size: 14px; line-height: 1.5;
-  color: var(--text2); margin-bottom: 8px;
-  text-align: left;
-}
-.modal-box .steps {
-  text-align: left; font-size: 14px; color: var(--text2);
-  margin: 10px 0; padding-left: 20px;
-}
+.modal-box h2 { font-size: 18px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+.modal-box p { font-size: 14px; line-height: 1.5; color: var(--text2); margin-bottom: 8px; text-align: left; }
+.modal-box .steps { text-align: left; font-size: 14px; color: var(--text2); margin: 10px 0; padding-left: 20px; }
 .modal-box .steps li { margin-bottom: 6px; line-height: 1.4; }
 .modal-close-btn {
   margin-top: 16px; padding: 12px 32px;
@@ -370,15 +300,81 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 16px; font-weight: 600;
   cursor: pointer; font-family: inherit;
   -webkit-appearance: none; appearance: none;
-  touch-action: manipulation;
-  width: 100%;
+  touch-action: manipulation; width: 100%;
 }
 
-/* Responsive adjustments for very small screens */
+/* ===== Debug Panel ===== */
+#debugPanel { display: none; }
+#debugPanel.visible { display: block; }
+
+.debug-section {
+  background: var(--card); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border-left: 4px solid var(--orange);
+}
+.debug-section.loss-section { border-left-color: var(--red); }
+.debug-section-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  margin-bottom: 12px;
+}
+
+.debug-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12px;
+}
+.debug-table th {
+  text-align: left; font-weight: 600; color: var(--text3);
+  padding: 4px 4px 6px; border-bottom: 1px solid var(--separator);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.debug-table th:not(:first-child) { text-align: right; }
+.debug-table td {
+  padding: 5px 4px; border-bottom: 0.5px solid var(--separator);
+  color: var(--text2);
+}
+.debug-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.debug-table tr.total-row td {
+  font-weight: 700; color: var(--text);
+  border-top: 1.5px solid var(--text3); border-bottom: none;
+  padding-top: 7px;
+}
+
+.debug-summary {
+  margin-top: 12px; font-size: 13px;
+}
+.debug-summary-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 5px 0; border-bottom: 0.5px solid var(--separator);
+}
+.debug-summary-row:last-child { border-bottom: none; }
+.debug-summary-row .label { color: var(--text2); }
+.debug-summary-row .value { font-weight: 700; font-variant-numeric: tabular-nums; }
+.debug-summary-row .note {
+  font-size: 11px; color: var(--text3); margin-left: 6px;
+}
+.debug-summary-row.highlight .label { font-weight: 700; color: var(--text); }
+.debug-summary-row.highlight .value { color: var(--accent); }
+.debug-summary-row.grand .label { font-weight: 700; color: var(--text); font-size: 14px; }
+.debug-summary-row.grand .value { color: var(--green); font-size: 14px; }
+
+.debug-loss-input-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; font-size: 13px; color: var(--text2);
+}
+.debug-loss-input-row input {
+  width: 60px; font-size: 14px; text-align: center;
+  border: 1.5px solid var(--separator); border-radius: 8px;
+  padding: 6px; font-family: inherit; color: var(--red);
+  font-weight: 600; outline: none; background: white;
+}
+.debug-loss-input-row input:focus { border-color: var(--red); }
+
 @media (max-width: 350px) {
   .portfolio-input { font-size: 26px; padding: 14px 12px 14px 30px; }
   .portfolio-input-wrap .currency { font-size: 24px; left: 12px; }
   .result-cell .amount { font-size: 14px; }
+  .debug-table { font-size: 11px; }
 }
 </style>
 </head>
@@ -386,7 +382,10 @@ input[type="range"]::-webkit-slider-thumb {
 
 <div class="header">
   <h1>VPW Calculator</h1>
-  <button class="header-btn" id="aboutBtn" aria-label="Info">?</button>
+  <div class="header-btns">
+    <button class="header-btn" id="debugBtn" aria-label="Debug" style="font-size:14px;font-weight:700;">D</button>
+    <button class="header-btn" id="aboutBtn" aria-label="Info">?</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -411,7 +410,7 @@ input[type="range"]::-webkit-slider-thumb {
         <span>|</span>
         <span><span id="badgeAlloc">60</span>/<span id="badgeAllocBond">40</span></span>
         <span>|</span>
-        <span>VPW <span class="rate" id="badgeRate">0.0</span>%</span>
+        <span>VPW Rate [A] = <span class="rate" id="badgeRate">0.0</span>%</span>
       </div>
     </div>
 
@@ -419,54 +418,27 @@ input[type="range"]::-webkit-slider-thumb {
       <div class="card">
         <div class="card-title">Portfolio Withdrawal</div>
         <div class="result-grid">
-          <div class="result-cell">
-            <div class="freq">Monthly</div>
-            <div class="amount" id="pwMonthly">--</div>
-          </div>
-          <div class="result-cell">
-            <div class="freq">Quarterly</div>
-            <div class="amount" id="pwQuarterly">--</div>
-          </div>
-          <div class="result-cell">
-            <div class="freq">Annually</div>
-            <div class="amount" id="pwAnnually">--</div>
-          </div>
+          <div class="result-cell"><div class="freq">Monthly</div><div class="amount" id="pwMonthly">--</div></div>
+          <div class="result-cell"><div class="freq">Quarterly</div><div class="amount" id="pwQuarterly">--</div></div>
+          <div class="result-cell"><div class="freq">Annually</div><div class="amount" id="pwAnnually">--</div></div>
         </div>
       </div>
 
       <div class="card" id="pensionIncomeCard" style="display:none;">
         <div class="card-title">Pension Income</div>
         <div class="result-grid">
-          <div class="result-cell">
-            <div class="freq">Monthly</div>
-            <div class="amount" id="piMonthly">--</div>
-          </div>
-          <div class="result-cell">
-            <div class="freq">Quarterly</div>
-            <div class="amount" id="piQuarterly">--</div>
-          </div>
-          <div class="result-cell">
-            <div class="freq">Annually</div>
-            <div class="amount" id="piAnnually">--</div>
-          </div>
+          <div class="result-cell"><div class="freq">Monthly</div><div class="amount" id="piMonthly">--</div></div>
+          <div class="result-cell"><div class="freq">Quarterly</div><div class="amount" id="piQuarterly">--</div></div>
+          <div class="result-cell"><div class="freq">Annually</div><div class="amount" id="piAnnually">--</div></div>
         </div>
       </div>
 
       <div class="card total-card">
         <div class="card-title">Total Income</div>
         <div class="result-grid">
-          <div class="result-cell">
-            <div class="freq">Monthly</div>
-            <div class="amount" id="tiMonthly">--</div>
-          </div>
-          <div class="result-cell">
-            <div class="freq">Quarterly</div>
-            <div class="amount" id="tiQuarterly">--</div>
-          </div>
-          <div class="result-cell">
-            <div class="freq">Annually</div>
-            <div class="amount" id="tiAnnually">--</div>
-          </div>
+          <div class="result-cell"><div class="freq">Monthly</div><div class="amount" id="tiMonthly">--</div></div>
+          <div class="result-cell"><div class="freq">Quarterly</div><div class="amount" id="tiQuarterly">--</div></div>
+          <div class="result-cell"><div class="freq">Annually</div><div class="amount" id="tiAnnually">--</div></div>
         </div>
       </div>
 
@@ -476,25 +448,27 @@ input[type="range"]::-webkit-slider-thumb {
       </div>
     </div>
 
+    <!-- DEBUG PANEL -->
+    <div id="debugPanel">
+      <div id="debugNormal" class="debug-section"></div>
+      <div id="debugLoss" class="debug-section loss-section"></div>
+    </div>
+
   </div>
 
   <!-- SETTINGS PAGE -->
   <div id="page-settings" class="page">
-
     <div class="card">
       <div class="card-title">Personal</div>
       <div class="form-row">
         <label for="settAge">Current Age</label>
-        <input type="number" id="settAge" value="65" min="30" max="99"
-               inputmode="numeric">
+        <input type="number" id="settAge" value="65" min="30" max="99" inputmode="numeric">
       </div>
       <div class="form-row">
         <label for="settDepletion">Depletion Age</label>
-        <input type="number" id="settDepletion" value="100" min="80" max="110"
-               inputmode="numeric">
+        <input type="number" id="settDepletion" value="100" min="80" max="110" inputmode="numeric">
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Portfolio Allocation</div>
       <div class="alloc-slider-wrap">
@@ -505,22 +479,18 @@ input[type="range"]::-webkit-slider-thumb {
         <input type="range" id="settAlloc" min="0" max="100" step="5" value="60">
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Assumptions</div>
       <div class="form-row">
         <label for="settInflation">Inflation Rate (%)</label>
-        <input type="number" id="settInflation" value="2.5" min="0" max="10" step="0.1"
-               inputmode="decimal">
+        <input type="number" id="settInflation" value="2.5" min="0" max="10" step="0.1" inputmode="decimal">
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Pensions &amp; Income</div>
       <div id="pensionList"></div>
       <button class="add-pension-btn" id="addPensionBtn">+ Add Pension or Income</button>
     </div>
-
     <div class="card">
       <div class="card-title">Configuration</div>
       <div class="config-actions">
@@ -529,13 +499,11 @@ input[type="range"]::-webkit-slider-thumb {
         <input type="file" id="importFileInput" accept=".json">
       </div>
     </div>
-
     <div class="info-line" style="margin-top:12px; padding-bottom: 30px;">
       Pensions with COLA maintain purchasing power.<br>
       Non-COLA pensions are treated as fixed nominal payments.<br>
       Update values at least once per year.
     </div>
-
   </div>
 
 </div>
@@ -574,7 +542,6 @@ input[type="range"]::-webkit-slider-thumb {
 // VPW Calculator - Core Logic
 // ==========================================
 
-// Assumed real returns by stock allocation % (derived from Bogleheads VPW tables)
 var REAL_RETURNS = {
   0: 0.0160, 5: 0.0176, 10: 0.0192, 15: 0.0209, 20: 0.0225,
   25: 0.0250, 30: 0.0274, 35: 0.0285, 40: 0.0295, 45: 0.0310,
@@ -582,6 +549,9 @@ var REAL_RETURNS = {
   75: 0.0403, 80: 0.0420, 85: 0.0438, 90: 0.0455, 95: 0.0473,
   100: 0.0490
 };
+
+var debugVisible = false;
+var lossPercent = 30;
 
 function getRealReturn(stockPct) {
   stockPct = Math.max(0, Math.min(100, Math.round(stockPct / 5) * 5));
@@ -632,6 +602,71 @@ function calcPensionPV(pension, currentAge, depletionAge, realReturn, inflation)
   return { pv: pv, currentIncome: currentIncome };
 }
 
+// Compute the full VPW breakdown for a given portfolio value
+function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
+  var realReturn = getRealReturn(stockPct);
+  var yearsRemaining = Math.max(1, depletion - age);
+  var vpwRate = Math.min(calcVPWRate(realReturn, yearsRemaining), 1.0);
+
+  // Per-pension bridge costs
+  var pensionDetails = [];
+  var totalBridgeCost = 0;
+  var totalCurrentIncome = 0;
+
+  for (var i = 0; i < pensions.length; i++) {
+    var res = calcPensionPV(pensions[i], age, depletion, realReturn, inflation);
+    pensionDetails.push({
+      name: pensions[i].name,
+      annualPayment: pensions[i].monthly * 12,
+      bridgeCost: res.pv,
+      currentIncome: res.currentIncome,
+      cola: pensions[i].cola
+    });
+    totalBridgeCost += res.pv;
+    totalCurrentIncome += res.currentIncome;
+  }
+
+  // Funding ratio
+  var fundingRatio = totalBridgeCost > 0 ? Math.min(1.0, portfolio / totalBridgeCost) : 1.0;
+
+  // Apply funding ratio to each pension
+  for (var j = 0; j < pensionDetails.length; j++) {
+    pensionDetails[j].fundingRatio = fundingRatio;
+    pensionDetails[j].effectivePayment = pensionDetails[j].annualPayment * fundingRatio;
+    pensionDetails[j].effectiveBridgeCost = pensionDetails[j].bridgeCost * fundingRatio;
+  }
+
+  var totalEffectiveBridgeCost = totalBridgeCost * fundingRatio;
+  var totalEffectivePayment = totalCurrentIncome * fundingRatio;
+
+  // Balance for VPW = portfolio minus effective bridge costs
+  var balanceForVPW = Math.max(0, portfolio - totalEffectiveBridgeCost);
+  var bridgePct = portfolio > 0 ? (totalEffectiveBridgeCost / portfolio) : 0;
+  var vpwPct = portfolio > 0 ? (balanceForVPW / portfolio) : 0;
+
+  // VPW withdrawal from remaining balance
+  var vpwWithdrawal = balanceForVPW * vpwRate;
+
+  // Total income
+  var totalIncome = vpwWithdrawal + totalEffectivePayment;
+
+  return {
+    portfolio: portfolio,
+    vpwRate: vpwRate,
+    pensionDetails: pensionDetails,
+    totalBridgeCost: totalBridgeCost,
+    totalEffectiveBridgeCost: totalEffectiveBridgeCost,
+    totalCurrentIncome: totalCurrentIncome,
+    totalEffectivePayment: totalEffectivePayment,
+    fundingRatio: fundingRatio,
+    balanceForVPW: balanceForVPW,
+    bridgePct: bridgePct,
+    vpwPct: vpwPct,
+    vpwWithdrawal: vpwWithdrawal,
+    totalIncome: totalIncome
+  };
+}
+
 function calculate() {
   var age = parseInt(document.getElementById('settAge').value) || 65;
   var depletion = parseInt(document.getElementById('settDepletion').value) || 100;
@@ -641,32 +676,23 @@ function calculate() {
   var portfolioStr = document.getElementById('portfolioValue').value.replace(/[^0-9.]/g, '');
   var portfolio = parseFloat(portfolioStr) || 0;
 
-  var realReturn = getRealReturn(stockPct);
-  var yearsRemaining = Math.max(1, depletion - age);
-  var vpwRate = calcVPWRate(realReturn, yearsRemaining);
-  var vpwRateCapped = Math.min(vpwRate, 1.0);
+  var bd = computeBreakdown(portfolio, age, depletion, stockPct, inflation);
 
-  var totalPensionPV = 0;
-  var totalCurrentPensionIncome = 0;
-
-  for (var i = 0; i < pensions.length; i++) {
-    var result = calcPensionPV(pensions[i], age, depletion, realReturn, inflation);
-    totalPensionPV += result.pv;
-    totalCurrentPensionIncome += result.currentIncome;
-  }
-
-  var totalWealth = portfolio + totalPensionPV;
-  var annualSpending = totalWealth * vpwRateCapped;
-  var annualPortfolioWithdrawal = annualSpending - totalCurrentPensionIncome;
-  annualPortfolioWithdrawal = Math.max(0, annualPortfolioWithdrawal);
-  annualPortfolioWithdrawal = Math.min(annualPortfolioWithdrawal, portfolio);
-  var annualTotalIncome = annualPortfolioWithdrawal + totalCurrentPensionIncome;
-
-  updateBadge(age, stockPct, vpwRateCapped * 100);
-  updateResults(annualPortfolioWithdrawal, totalCurrentPensionIncome, annualTotalIncome);
+  updateBadge(age, stockPct, bd.vpwRate * 100);
+  updateResults(bd.vpwWithdrawal, bd.totalEffectivePayment, bd.totalIncome);
   document.getElementById('infoDepletion').textContent = depletion;
   document.getElementById('pensionIncomeCard').style.display =
     pensions.length > 0 ? 'block' : 'none';
+
+  // Update debug panel if visible
+  if (debugVisible) {
+    var year = new Date().getFullYear();
+    renderDebugSection('debugNormal', 'Calculations For ' + year, bd);
+
+    var lossPortfolio = portfolio * (1 - lossPercent / 100);
+    var bdLoss = computeBreakdown(lossPortfolio, age, depletion, stockPct, inflation);
+    renderDebugSection('debugLoss', 'Calculations After ' + lossPercent + '% Loss', bdLoss);
+  }
 }
 
 function updateBadge(age, stockPct, rate) {
@@ -678,6 +704,10 @@ function updateBadge(age, stockPct, rate) {
 
 function formatCurrency(value) {
   return '$' + Math.round(value).toLocaleString('en-US');
+}
+
+function formatPct(value) {
+  return (value * 100).toFixed(1) + '%';
 }
 
 function updateResults(annualPW, annualPI, annualTI) {
@@ -695,27 +725,131 @@ function updateResults(annualPW, annualPI, annualTI) {
   }
 
   function setAmounts(prefix, annual) {
-    var monthly = annual / 12;
-    var quarterly = annual / 4;
     var mEl = document.getElementById(prefix + 'Monthly');
     var qEl = document.getElementById(prefix + 'Quarterly');
     var aEl = document.getElementById(prefix + 'Annually');
-    mEl.textContent = formatCurrency(monthly);
-    qEl.textContent = formatCurrency(quarterly);
+    mEl.textContent = formatCurrency(annual / 12);
+    qEl.textContent = formatCurrency(annual / 4);
     aEl.textContent = formatCurrency(annual);
     var els = [mEl, qEl, aEl];
     for (var j = 0; j < els.length; j++) {
-      if (els[j].textContent.length > 8) {
-        els[j].classList.add('small');
-      } else {
-        els[j].classList.remove('small');
-      }
+      if (els[j].textContent.length > 8) els[j].classList.add('small');
+      else els[j].classList.remove('small');
     }
   }
 
   setAmounts('pw', annualPW);
   setAmounts('pi', annualPI);
   setAmounts('ti', annualTI);
+}
+
+// ==========================================
+// Debug Panel Rendering
+// ==========================================
+
+function renderDebugSection(containerId, title, bd) {
+  var el = document.getElementById(containerId);
+  var isLoss = containerId === 'debugLoss';
+
+  var html = '';
+
+  // Loss % input for the loss section
+  if (isLoss) {
+    html += '<div class="debug-loss-input-row">' +
+      '<span>Portfolio loss:</span>' +
+      '<input type="number" id="lossPercentInput" value="' + lossPercent + '" min="1" max="99" inputmode="numeric">'+
+      '<span>%</span>' +
+    '</div>';
+  }
+
+  html += '<div class="debug-section-title">' + title + '</div>';
+
+  // Bridge cost table (only if pensions exist)
+  if (bd.pensionDetails.length > 0) {
+    html += '<table class="debug-table">' +
+      '<tr><th>Source</th><th>Eff. Annual</th><th>Funded</th><th>Bridge Cost</th></tr>';
+
+    for (var i = 0; i < bd.pensionDetails.length; i++) {
+      var p = bd.pensionDetails[i];
+      html += '<tr>' +
+        '<td>' + escapeAttr(p.name) + '</td>' +
+        '<td>' + formatCurrency(p.effectivePayment) + '</td>' +
+        '<td>' + formatPct(p.fundingRatio) + '</td>' +
+        '<td>' + formatCurrency(p.effectiveBridgeCost) + '</td>' +
+      '</tr>';
+    }
+
+    html += '<tr class="total-row">' +
+      '<td>Total</td>' +
+      '<td>' + formatCurrency(bd.totalEffectivePayment) + '</td>' +
+      '<td></td>' +
+      '<td>' + formatCurrency(bd.totalEffectiveBridgeCost) + '</td>' +
+    '</tr></table>';
+  }
+
+  // Summary
+  html += '<div class="debug-summary">';
+
+  html += '<div class="debug-summary-row">' +
+    '<span class="label">Portfolio Balance</span>' +
+    '<span class="value">' + formatCurrency(bd.portfolio) + '</span></div>';
+
+  if (bd.pensionDetails.length > 0) {
+    html += '<div class="debug-summary-row">' +
+      '<span class="label">Total Eff. Cost of Bridges</span>' +
+      '<span><span class="value">' + formatCurrency(bd.totalEffectiveBridgeCost) + '</span>' +
+      '<span class="note">' + formatPct(bd.bridgePct) + '</span></span></div>';
+
+    html += '<div class="debug-summary-row highlight">' +
+      '<span class="label">Balance Available For VPW</span>' +
+      '<span><span class="value">' + formatCurrency(bd.balanceForVPW) + '</span>' +
+      '<span class="note">' + formatPct(bd.vpwPct) + '</span></span></div>';
+  }
+
+  html += '<div class="debug-summary-row">' +
+    '<span class="label">VPW Withdrawal</span>' +
+    '<span><span class="value">' + formatCurrency(bd.vpwWithdrawal) + '</span>' +
+    '<span class="note">x [A] ' + (bd.vpwRate * 100).toFixed(1) + '%</span></span></div>';
+
+  if (bd.pensionDetails.length > 0) {
+    html += '<div class="debug-summary-row">' +
+      '<span class="label">Total Eff. Annual Payments</span>' +
+      '<span class="value">' + formatCurrency(bd.totalEffectivePayment) + '</span></div>';
+  }
+
+  html += '<div class="debug-summary-row grand">' +
+    '<span class="label">Total Annual Retirement Income</span>' +
+    '<span class="value">' + formatCurrency(bd.totalIncome) + '</span></div>';
+
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  // Bind loss % input
+  if (isLoss) {
+    var lossInput = document.getElementById('lossPercentInput');
+    if (lossInput) {
+      lossInput.addEventListener('change', function() {
+        lossPercent = Math.max(1, Math.min(99, parseInt(this.value, 10) || 30));
+        this.value = lossPercent;
+        calculate();
+      });
+    }
+  }
+}
+
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  var panel = document.getElementById('debugPanel');
+  var btn = document.getElementById('debugBtn');
+  if (debugVisible) {
+    panel.classList.add('visible');
+    btn.classList.add('debug-active');
+    calculate();
+  } else {
+    panel.classList.remove('visible');
+    btn.classList.remove('debug-active');
+  }
 }
 
 // ==========================================
@@ -801,7 +935,7 @@ function escapeAttr(str) {
 }
 
 // ==========================================
-// UI Interactions (all via addEventListener)
+// UI Interactions
 // ==========================================
 
 function switchTab(tab) {
@@ -830,29 +964,20 @@ function onAllocChange(slider) {
 function onPortfolioInput(input) {
   var raw = input.value.replace(/[^0-9]/g, '');
   if (raw.length > 0) {
-    var num = parseInt(raw, 10);
-    input.value = num.toLocaleString('en-US');
+    input.value = parseInt(raw, 10).toLocaleString('en-US');
   } else {
     input.value = '';
   }
   calculate();
 }
 
-function saveAndCalc() {
-  saveSettings();
-  calculate();
-}
+function saveAndCalc() { saveSettings(); calculate(); }
 
-function showAbout() {
-  document.getElementById('aboutModal').classList.add('visible');
-}
-
-function hideAbout() {
-  document.getElementById('aboutModal').classList.remove('visible');
-}
+function showAbout() { document.getElementById('aboutModal').classList.add('visible'); }
+function hideAbout() { document.getElementById('aboutModal').classList.remove('visible'); }
 
 // ==========================================
-// Persistence (localStorage)
+// Persistence
 // ==========================================
 
 function saveSettings() {
@@ -864,9 +989,7 @@ function saveSettings() {
     portfolio: document.getElementById('portfolioValue').value,
     pensions: pensions
   };
-  try {
-    localStorage.setItem('vpw-settings', JSON.stringify(settings));
-  } catch(e) {}
+  try { localStorage.setItem('vpw-settings', JSON.stringify(settings)); } catch(e) {}
 }
 
 function loadSettings() {
@@ -899,8 +1022,7 @@ function exportConfig() {
     portfolioValue: document.getElementById('portfolioValue').value,
     pensions: pensions
   };
-  var json = JSON.stringify(settings, null, 2);
-  document.getElementById('exportText').value = json;
+  document.getElementById('exportText').value = JSON.stringify(settings, null, 2);
   document.getElementById('exportModal').classList.add('visible');
 }
 
@@ -911,22 +1033,16 @@ function copyExport() {
   try {
     navigator.clipboard.writeText(textarea.value).then(function() {
       document.getElementById('exportCopyBtn').textContent = 'Copied!';
-      setTimeout(function() {
-        document.getElementById('exportCopyBtn').textContent = 'Copy to Clipboard';
-      }, 2000);
+      setTimeout(function() { document.getElementById('exportCopyBtn').textContent = 'Copy to Clipboard'; }, 2000);
     });
   } catch(e) {
     document.execCommand('copy');
     document.getElementById('exportCopyBtn').textContent = 'Copied!';
-    setTimeout(function() {
-      document.getElementById('exportCopyBtn').textContent = 'Copy to Clipboard';
-    }, 2000);
+    setTimeout(function() { document.getElementById('exportCopyBtn').textContent = 'Copy to Clipboard'; }, 2000);
   }
 }
 
-function importConfig() {
-  document.getElementById('importFileInput').click();
-}
+function importConfig() { document.getElementById('importFileInput').click(); }
 
 function handleImportFile(file) {
   var reader = new FileReader();
@@ -946,7 +1062,6 @@ function handleImportFile(file) {
       saveAndCalc();
     } catch(err) {
       var m = document.getElementById('aboutModal');
-      m.querySelector('h2').textContent = 'Import Error';
       m.querySelector('.modal-box').innerHTML =
         '<h2>Import Error</h2><p>Could not read the file. Make sure it is a valid VPW config JSON file.</p>' +
         '<button class="modal-close-btn" id="modalCloseBtn">OK</button>';
@@ -958,7 +1073,7 @@ function handleImportFile(file) {
 }
 
 // ==========================================
-// Event Binding (all via addEventListener for iOS reliability)
+// Event Binding
 // ==========================================
 
 function init() {
@@ -966,18 +1081,17 @@ function init() {
   renderPensions();
   onAllocChange(document.getElementById('settAlloc'));
 
-  // Tab buttons
   document.getElementById('tabCalc').addEventListener('click', function() { switchTab('calc'); });
   document.getElementById('tabSettings').addEventListener('click', function() { switchTab('settings'); });
 
-  // About button and modal
   document.getElementById('aboutBtn').addEventListener('click', showAbout);
   document.getElementById('modalCloseBtn').addEventListener('click', hideAbout);
   document.getElementById('aboutModal').addEventListener('click', function(e) {
     if (e.target === this) hideAbout();
   });
 
-  // Portfolio input
+  document.getElementById('debugBtn').addEventListener('click', toggleDebug);
+
   var portfolioInput = document.getElementById('portfolioValue');
   portfolioInput.addEventListener('input', function() { onPortfolioInput(this); });
   portfolioInput.addEventListener('blur', function() {
@@ -985,7 +1099,6 @@ function init() {
     if (raw.length > 0) this.value = parseInt(raw, 10).toLocaleString('en-US');
   });
 
-  // Settings inputs
   document.getElementById('settAge').addEventListener('change', saveAndCalc);
   document.getElementById('settDepletion').addEventListener('change', saveAndCalc);
   document.getElementById('settInflation').addEventListener('change', saveAndCalc);
@@ -994,10 +1107,8 @@ function init() {
   allocSlider.addEventListener('input', function() { onAllocChange(this); });
   allocSlider.addEventListener('change', saveAndCalc);
 
-  // Add pension button
   document.getElementById('addPensionBtn').addEventListener('click', function() { addPension(); });
 
-  // Export / Import
   document.getElementById('exportBtn').addEventListener('click', exportConfig);
   document.getElementById('importBtn').addEventListener('click', importConfig);
   document.getElementById('exportCopyBtn').addEventListener('click', copyExport);
@@ -1014,20 +1125,11 @@ function init() {
     }
   });
 
-  // Delegated events for pension list (handles dynamically created elements)
   document.getElementById('pensionList').addEventListener('click', function(e) {
-    // Delete button
     var delBtn = e.target.closest('[data-delete]');
-    if (delBtn) {
-      removePension(parseInt(delBtn.getAttribute('data-delete'), 10));
-      return;
-    }
-    // COLA toggle
+    if (delBtn) { removePension(parseInt(delBtn.getAttribute('data-delete'), 10)); return; }
     var toggle = e.target.closest('[data-cola]');
-    if (toggle) {
-      togglePensionCOLA(parseInt(toggle.getAttribute('data-cola'), 10), toggle);
-      return;
-    }
+    if (toggle) { togglePensionCOLA(parseInt(toggle.getAttribute('data-cola'), 10), toggle); return; }
   });
 
   document.getElementById('pensionList').addEventListener('change', function(e) {
@@ -1035,14 +1137,9 @@ function init() {
     var idx = parseInt(input.getAttribute('data-index'), 10);
     var field = input.getAttribute('data-field');
     if (isNaN(idx) || !field) return;
-
-    if (field === 'monthly') {
-      updatePension(idx, field, parseInt(input.value.replace(/[^0-9]/g, ''), 10) || 0);
-    } else if (field === 'startAge') {
-      updatePension(idx, field, parseInt(input.value, 10) || 65);
-    } else if (field === 'name') {
-      updatePension(idx, field, input.value);
-    }
+    if (field === 'monthly') updatePension(idx, field, parseInt(input.value.replace(/[^0-9]/g, ''), 10) || 0);
+    else if (field === 'startAge') updatePension(idx, field, parseInt(input.value, 10) || 65);
+    else if (field === 'name') updatePension(idx, field, input.value);
   });
 
   calculate();
