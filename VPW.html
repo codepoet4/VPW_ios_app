@@ -608,28 +608,37 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   var yearsRemaining = Math.max(1, depletion - age);
   var vpwRate = Math.min(calcVPWRate(realReturn, yearsRemaining), 1.0);
 
-  // Annuity-due PV factor at real rate — used to convert bridge costs
-  // back to a real-dollar annual equivalent for each pension
-  var colaADPV = annuityDuePV(realReturn, yearsRemaining);
-
   // Per-pension bridge costs
   var pensionDetails = [];
   var totalBridgeCost = 0;
   var totalCurrentIncome = 0;
 
   for (var i = 0; i < pensions.length; i++) {
-    var res = calcPensionPV(pensions[i], age, depletion, realReturn, inflation);
-    // Real-equivalent annual: what COLA payment would produce the same bridge cost?
-    // COLA pensions: effectiveAnnual ≈ stated annual (PV uses real rate)
-    // Non-COLA pensions: effectiveAnnual < stated annual (PV uses nominal rate → lower)
-    var effectiveAnnual = colaADPV > 0 ? res.pv / colaADPV : 0;
+    var p = pensions[i];
+    var res = calcPensionPV(p, age, depletion, realReturn, inflation);
+    var annualPayment = p.monthly * 12;
+
+    // Effective annual: the real-dollar annual equivalent of this pension.
+    // Uses total pension duration (depletion - startAge) so start age matters.
+    // COLA pensions currently receiving: full purchasing power (100%).
+    // Non-COLA and deferred: derive from bridge cost / annuityDuePV over
+    // the pension's total duration, which accounts for inflation erosion.
+    var effectiveAnnual;
+    if (p.cola && p.startAge <= age) {
+      effectiveAnnual = annualPayment;
+    } else {
+      var pensionDuration = Math.max(1, depletion - p.startAge);
+      var pensionADPV = annuityDuePV(realReturn, pensionDuration);
+      effectiveAnnual = pensionADPV > 0 ? res.pv / pensionADPV : 0;
+    }
+
     pensionDetails.push({
-      name: pensions[i].name,
-      annualPayment: pensions[i].monthly * 12,
+      name: p.name,
+      annualPayment: annualPayment,
       effectiveAnnual: effectiveAnnual,
       bridgeCost: res.pv,
       currentIncome: res.currentIncome,
-      cola: pensions[i].cola
+      cola: p.cola
     });
     totalBridgeCost += res.pv;
     totalCurrentIncome += res.currentIncome;
