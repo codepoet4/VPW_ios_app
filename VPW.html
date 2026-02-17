@@ -639,13 +639,17 @@ function calcPensionPV(pension, currentAge, depletionAge, realReturn, inflation)
 }
 
 // Compute the full VPW breakdown for a given portfolio value
-// Bridge cost = max(0, startAge - currentAge) * effectiveAnnual
+// Bridge cost = PV of effectiveAnnual annuity over gap years at blended rate
+// Blended bridge rate = stockPct% * 5.0% + bondPct% * 1.9%
 // Eff. Annual: COLA = monthly*12, non-COLA = monthly*12 * 65.7% / (1+inf)^gapYears
 // Pension income only counts when startAge <= currentAge
 function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   var realReturn = getRealReturn(stockPct);
   var yearsRemaining = Math.max(1, depletion - age);
   var vpwRate = Math.min(calcVPWRate(realReturn, yearsRemaining), 1.0);
+
+  // Blended rate for bridge cost: 5.0% stocks, 1.9% bonds
+  var bridgeRate = (stockPct / 100) * 0.05 + (1 - stockPct / 100) * 0.019;
 
   // First pass: compute effective annual and raw bridge costs
   var pensionDetails = [];
@@ -667,7 +671,8 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
       effectiveAnnual = annualPayment * 0.657 / Math.pow(1 + inflation, gapYears);
     }
 
-    var rawBridgeCost = gapYears * effectiveAnnual;
+    // Bridge cost = PV of annuity-due paying effectiveAnnual over gapYears
+    var rawBridgeCost = effectiveAnnual * annuityDuePV(bridgeRate, gapYears);
     if (isReceiving) hasReceiving = true;
 
     pensionDetails.push({
