@@ -608,6 +608,10 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   var yearsRemaining = Math.max(1, depletion - age);
   var vpwRate = Math.min(calcVPWRate(realReturn, yearsRemaining), 1.0);
 
+  // Annuity-due PV factor at real rate — used to convert bridge costs
+  // back to a real-dollar annual equivalent for each pension
+  var colaADPV = annuityDuePV(realReturn, yearsRemaining);
+
   // Per-pension bridge costs
   var pensionDetails = [];
   var totalBridgeCost = 0;
@@ -615,9 +619,14 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
 
   for (var i = 0; i < pensions.length; i++) {
     var res = calcPensionPV(pensions[i], age, depletion, realReturn, inflation);
+    // Real-equivalent annual: what COLA payment would produce the same bridge cost?
+    // COLA pensions: effectiveAnnual ≈ stated annual (PV uses real rate)
+    // Non-COLA pensions: effectiveAnnual < stated annual (PV uses nominal rate → lower)
+    var effectiveAnnual = colaADPV > 0 ? res.pv / colaADPV : 0;
     pensionDetails.push({
       name: pensions[i].name,
       annualPayment: pensions[i].monthly * 12,
+      effectiveAnnual: effectiveAnnual,
       bridgeCost: res.pv,
       currentIncome: res.currentIncome,
       cola: pensions[i].cola
@@ -629,15 +638,16 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   // Funding ratio
   var fundingRatio = totalBridgeCost > 0 ? Math.min(1.0, portfolio / totalBridgeCost) : 1.0;
 
-  // Apply funding ratio to each pension
+  // Apply funding ratio to each pension and sum effective payments
+  var totalEffectivePayment = 0;
   for (var j = 0; j < pensionDetails.length; j++) {
     pensionDetails[j].fundingRatio = fundingRatio;
-    pensionDetails[j].effectivePayment = pensionDetails[j].annualPayment * fundingRatio;
+    pensionDetails[j].effectivePayment = pensionDetails[j].effectiveAnnual * fundingRatio;
     pensionDetails[j].effectiveBridgeCost = pensionDetails[j].bridgeCost * fundingRatio;
+    totalEffectivePayment += pensionDetails[j].effectivePayment;
   }
 
   var totalEffectiveBridgeCost = totalBridgeCost * fundingRatio;
-  var totalEffectivePayment = totalCurrentIncome * fundingRatio;
 
   // Balance for VPW = portfolio minus effective bridge costs
   var balanceForVPW = Math.max(0, portfolio - totalEffectiveBridgeCost);
@@ -968,7 +978,7 @@ function onPortfolioInput(input) {
   } else {
     input.value = '';
   }
-  calculate();
+  saveAndCalc();
 }
 
 function saveAndCalc() { saveSettings(); calculate(); }
