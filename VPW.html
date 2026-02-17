@@ -600,8 +600,8 @@ function calcVPWRate(realReturn, yearsRemaining) {
   if (realReturn === 0) return 1 / yearsRemaining;
   var r = realReturn;
   var n = yearsRemaining;
-  // Annuity-due (beginning of period) PMT factor
-  return r / ((1 + r) * (1 - Math.pow(1 + r, -n)));
+  // Ordinary annuity PMT factor (per Bogleheads VPW table)
+  return r / (1 - Math.pow(1 + r, -n));
 }
 
 function annuityDuePV(rate, n) {
