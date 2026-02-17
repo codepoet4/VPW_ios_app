@@ -176,6 +176,27 @@ body {
   text-align: center; margin-top: 4px; padding: 0 8px;
 }
 
+.pension-breakdown { margin-top: 10px; }
+.pension-breakdown-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+  align-items: center; padding: 3px 0;
+  font-size: 12px; color: var(--text2);
+  border-top: 0.5px solid var(--separator);
+}
+.pension-breakdown-row:first-child { border-top: none; }
+.pension-breakdown-row .pb-name {
+  font-weight: 600; font-size: 11px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pension-breakdown-row .pb-amt {
+  text-align: center; font-variant-numeric: tabular-nums; font-size: 12px;
+}
+.pension-breakdown-row .pb-amt.zero { color: var(--text3); }
+.pension-breakdown-row.pb-header .pb-amt {
+  font-size: 10px; color: var(--text3); text-transform: uppercase;
+  letter-spacing: 0.3px; font-weight: 600;
+}
+
 .pension-card {
   background: var(--bg); border-radius: 12px;
   padding: 14px; margin-bottom: 10px; position: relative;
@@ -422,6 +443,7 @@ input[type="range"]::-webkit-slider-thumb {
           <div class="result-cell"><div class="freq">Quarterly</div><div class="amount" id="pwQuarterly">--</div></div>
           <div class="result-cell"><div class="freq">Annually</div><div class="amount" id="pwAnnually">--</div></div>
         </div>
+        <div id="pensionBreakdown" class="pension-breakdown"></div>
       </div>
 
       <div class="card" id="pensionIncomeCard" style="display:none;">
@@ -663,16 +685,22 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   // Funding ratio based on raw bridge costs
   var fundingRatio = totalRawBridgeCost > 0 ? Math.min(1.0, portfolio / totalRawBridgeCost) : 1.0;
 
-  // Second pass: apply funding ratio; only receiving pensions contribute income
+  // Second pass: apply funding ratio; all pensions get effectivePayment
   var totalEffectivePayment = 0;
   var totalEffectiveBridgeCost = 0;
+  var receivingPayment = 0;
+  var bridgedPayment = 0;
   for (var j = 0; j < pensionDetails.length; j++) {
     pensionDetails[j].fundingRatio = fundingRatio;
-    pensionDetails[j].effectivePayment = pensionDetails[j].isReceiving
-      ? pensionDetails[j].effectiveAnnual * fundingRatio : 0;
+    pensionDetails[j].effectivePayment = pensionDetails[j].effectiveAnnual * fundingRatio;
     pensionDetails[j].effectiveBridgeCost = pensionDetails[j].rawBridgeCost * fundingRatio;
     totalEffectivePayment += pensionDetails[j].effectivePayment;
     totalEffectiveBridgeCost += pensionDetails[j].effectiveBridgeCost;
+    if (pensionDetails[j].isReceiving) {
+      receivingPayment += pensionDetails[j].effectivePayment;
+    } else {
+      bridgedPayment += pensionDetails[j].effectivePayment;
+    }
   }
 
   // Balance for VPW = portfolio minus effective bridge costs
@@ -683,7 +711,10 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   // VPW withdrawal from remaining balance
   var vpwWithdrawal = balanceForVPW * vpwRate;
 
-  // Total income = VPW withdrawal + receiving pension income only
+  // Portfolio withdrawal = VPW + bridged (deferred) pension payments
+  var portfolioWithdrawal = vpwWithdrawal + bridgedPayment;
+
+  // Total income = VPW withdrawal + all effective pension payments
   var totalIncome = vpwWithdrawal + totalEffectivePayment;
 
   return {
@@ -694,6 +725,9 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
     totalEffectiveBridgeCost: totalEffectiveBridgeCost,
     totalEffectiveAnnual: totalEffectiveAnnual,
     totalEffectivePayment: totalEffectivePayment,
+    receivingPayment: receivingPayment,
+    bridgedPayment: bridgedPayment,
+    portfolioWithdrawal: portfolioWithdrawal,
     hasReceiving: hasReceiving,
     fundingRatio: fundingRatio,
     balanceForVPW: balanceForVPW,
@@ -716,7 +750,7 @@ function calculate() {
   var bd = computeBreakdown(portfolio, age, depletion, stockPct, inflation);
 
   updateBadge(age, stockPct, bd.vpwRate * 100);
-  updateResults(bd.vpwWithdrawal, bd.totalEffectivePayment, bd.totalIncome);
+  updateResults(bd);
   document.getElementById('infoDepletion').textContent = depletion;
   document.getElementById('pensionIncomeCard').style.display =
     bd.hasReceiving ? 'block' : 'none';
@@ -747,7 +781,7 @@ function formatPct(value) {
   return (value * 100).toFixed(1) + '%';
 }
 
-function updateResults(annualPW, annualPI, annualTI) {
+function updateResults(bd) {
   var portfolioStr = document.getElementById('portfolioValue').value.replace(/[^0-9.]/g, '');
   var hasValue = parseFloat(portfolioStr) > 0 || pensions.length > 0;
 
@@ -758,6 +792,7 @@ function updateResults(annualPW, annualPI, annualTI) {
     for (var i = 0; i < ids.length; i++) {
       document.getElementById(ids[i]).textContent = '--';
     }
+    document.getElementById('pensionBreakdown').innerHTML = '';
     return;
   }
 
@@ -775,9 +810,44 @@ function updateResults(annualPW, annualPI, annualTI) {
     }
   }
 
-  setAmounts('pw', annualPW);
-  setAmounts('pi', annualPI);
-  setAmounts('ti', annualTI);
+  // Portfolio Withdrawal = VPW + bridged pension payments
+  setAmounts('pw', bd.portfolioWithdrawal);
+  // Pension Income = receiving pensions only
+  setAmounts('pi', bd.receivingPayment);
+  // Total = all
+  setAmounts('ti', bd.totalIncome);
+
+  // Per-pension breakdown under Portfolio Withdrawal
+  var pbContainer = document.getElementById('pensionBreakdown');
+  if (bd.pensionDetails.length > 0) {
+    var html = '<div class="pension-breakdown-row pb-header">' +
+      '<span class="pb-name"></span>' +
+      '<span class="pb-amt">Mo</span>' +
+      '<span class="pb-amt">Qtr</span>' +
+      '<span class="pb-amt">Ann</span></div>';
+
+    for (var k = 0; k < bd.pensionDetails.length; k++) {
+      var p = bd.pensionDetails[k];
+      var ann = p.isReceiving ? p.effectivePayment : 0;
+      var zc = ann === 0 ? ' zero' : '';
+      html += '<div class="pension-breakdown-row">' +
+        '<span class="pb-name">' + escapeAttr(p.name) + '</span>' +
+        '<span class="pb-amt' + zc + '">' + formatCurrency(ann / 12) + '</span>' +
+        '<span class="pb-amt' + zc + '">' + formatCurrency(ann / 4) + '</span>' +
+        '<span class="pb-amt' + zc + '">' + formatCurrency(ann) + '</span></div>';
+    }
+
+    // VPW + Bridged summary line
+    html += '<div class="pension-breakdown-row" style="border-top:1.5px solid var(--text3);font-weight:700;padding-top:5px;">' +
+      '<span class="pb-name" style="font-size:10px;">VPW + Bridged</span>' +
+      '<span class="pb-amt">' + formatCurrency((bd.vpwWithdrawal + bd.bridgedPayment) / 12) + '</span>' +
+      '<span class="pb-amt">' + formatCurrency((bd.vpwWithdrawal + bd.bridgedPayment) / 4) + '</span>' +
+      '<span class="pb-amt">' + formatCurrency(bd.vpwWithdrawal + bd.bridgedPayment) + '</span></div>';
+
+    pbContainer.innerHTML = html;
+  } else {
+    pbContainer.innerHTML = '';
+  }
 }
 
 // ==========================================
