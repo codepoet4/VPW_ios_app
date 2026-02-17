@@ -521,6 +521,20 @@ input[type="range"]::-webkit-slider-thumb {
   </div>
 </div>
 
+<!-- Import Modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <h2>Import Configuration</h2>
+    <p>Paste your VPW config JSON below, or choose a file.</p>
+    <textarea id="importText" placeholder='Paste JSON here...'></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="importCancelBtn">Cancel</button>
+      <button class="btn-secondary" id="importFileBtn">From File</button>
+      <button class="btn-primary" id="importApplyBtn">Apply</button>
+    </div>
+  </div>
+</div>
+
 <!-- About Modal -->
 <div class="modal-overlay" id="aboutModal">
   <div class="modal-box">
@@ -603,60 +617,49 @@ function calcPensionPV(pension, currentAge, depletionAge, realReturn, inflation)
 }
 
 // Compute the full VPW breakdown for a given portfolio value
+// Bridge cost = max(0, startAge - currentAge) * effectiveAnnual
+// Eff. Annual = monthly*12 for COLA, monthly*12 * 66.67% for non-COLA
 function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
   var realReturn = getRealReturn(stockPct);
   var yearsRemaining = Math.max(1, depletion - age);
   var vpwRate = Math.min(calcVPWRate(realReturn, yearsRemaining), 1.0);
 
-  // Per-pension bridge costs
+  // First pass: compute effective annual and raw bridge costs
   var pensionDetails = [];
-  var totalBridgeCost = 0;
-  var totalCurrentIncome = 0;
+  var totalRawBridgeCost = 0;
+  var totalEffectiveAnnual = 0;
 
   for (var i = 0; i < pensions.length; i++) {
     var p = pensions[i];
-    var res = calcPensionPV(p, age, depletion, realReturn, inflation);
     var annualPayment = p.monthly * 12;
-
-    // Effective annual: the real-dollar annual equivalent of this pension.
-    // Uses total pension duration (depletion - startAge) so start age matters.
-    // COLA pensions currently receiving: full purchasing power (100%).
-    // Non-COLA and deferred: derive from bridge cost / annuityDuePV over
-    // the pension's total duration, which accounts for inflation erosion.
-    var effectiveAnnual;
-    if (p.cola && p.startAge <= age) {
-      effectiveAnnual = annualPayment;
-    } else {
-      var pensionDuration = Math.max(1, depletion - p.startAge);
-      var pensionADPV = annuityDuePV(realReturn, pensionDuration);
-      effectiveAnnual = pensionADPV > 0 ? res.pv / pensionADPV : 0;
-    }
+    var effectiveAnnual = p.cola ? annualPayment : annualPayment * 0.6667;
+    var gapYears = Math.max(0, p.startAge - age);
+    var rawBridgeCost = gapYears * effectiveAnnual;
 
     pensionDetails.push({
       name: p.name,
       annualPayment: annualPayment,
       effectiveAnnual: effectiveAnnual,
-      bridgeCost: res.pv,
-      currentIncome: res.currentIncome,
+      rawBridgeCost: rawBridgeCost,
       cola: p.cola
     });
-    totalBridgeCost += res.pv;
-    totalCurrentIncome += res.currentIncome;
+    totalRawBridgeCost += rawBridgeCost;
+    totalEffectiveAnnual += effectiveAnnual;
   }
 
-  // Funding ratio
-  var fundingRatio = totalBridgeCost > 0 ? Math.min(1.0, portfolio / totalBridgeCost) : 1.0;
+  // Funding ratio based on raw bridge costs
+  var fundingRatio = totalRawBridgeCost > 0 ? Math.min(1.0, portfolio / totalRawBridgeCost) : 1.0;
 
-  // Apply funding ratio to each pension and sum effective payments
+  // Second pass: apply funding ratio
   var totalEffectivePayment = 0;
+  var totalEffectiveBridgeCost = 0;
   for (var j = 0; j < pensionDetails.length; j++) {
     pensionDetails[j].fundingRatio = fundingRatio;
     pensionDetails[j].effectivePayment = pensionDetails[j].effectiveAnnual * fundingRatio;
-    pensionDetails[j].effectiveBridgeCost = pensionDetails[j].bridgeCost * fundingRatio;
+    pensionDetails[j].effectiveBridgeCost = pensionDetails[j].rawBridgeCost * fundingRatio;
     totalEffectivePayment += pensionDetails[j].effectivePayment;
+    totalEffectiveBridgeCost += pensionDetails[j].effectiveBridgeCost;
   }
-
-  var totalEffectiveBridgeCost = totalBridgeCost * fundingRatio;
 
   // Balance for VPW = portfolio minus effective bridge costs
   var balanceForVPW = Math.max(0, portfolio - totalEffectiveBridgeCost);
@@ -673,9 +676,9 @@ function computeBreakdown(portfolio, age, depletion, stockPct, inflation) {
     portfolio: portfolio,
     vpwRate: vpwRate,
     pensionDetails: pensionDetails,
-    totalBridgeCost: totalBridgeCost,
+    totalRawBridgeCost: totalRawBridgeCost,
     totalEffectiveBridgeCost: totalEffectiveBridgeCost,
-    totalCurrentIncome: totalCurrentIncome,
+    totalEffectiveAnnual: totalEffectiveAnnual,
     totalEffectivePayment: totalEffectivePayment,
     fundingRatio: fundingRatio,
     balanceForVPW: balanceForVPW,
@@ -792,7 +795,7 @@ function renderDebugSection(containerId, title, bd) {
       var p = bd.pensionDetails[i];
       html += '<tr>' +
         '<td>' + escapeAttr(p.name) + '</td>' +
-        '<td>' + formatCurrency(p.effectivePayment) + '</td>' +
+        '<td>' + formatCurrency(p.effectiveAnnual) + '</td>' +
         '<td>' + formatPct(p.fundingRatio) + '</td>' +
         '<td>' + formatCurrency(p.effectiveBridgeCost) + '</td>' +
       '</tr>';
@@ -800,7 +803,7 @@ function renderDebugSection(containerId, title, bd) {
 
     html += '<tr class="total-row">' +
       '<td>Total</td>' +
-      '<td>' + formatCurrency(bd.totalEffectivePayment) + '</td>' +
+      '<td>' + formatCurrency(bd.totalEffectiveAnnual) + '</td>' +
       '<td></td>' +
       '<td>' + formatCurrency(bd.totalEffectiveBridgeCost) + '</td>' +
     '</tr></table>';
@@ -1061,24 +1064,52 @@ function copyExport() {
   }
 }
 
-function importConfig() { document.getElementById('importFileInput').click(); }
+function importConfig() {
+  document.getElementById('importText').value = '';
+  document.getElementById('importModal').classList.add('visible');
+}
+
+function hideImportModal() {
+  document.getElementById('importModal').classList.remove('visible');
+}
+
+function applyImportData(data) {
+  if (data.age !== undefined) document.getElementById('settAge').value = data.age;
+  if (data.depletionAge !== undefined) document.getElementById('settDepletion').value = data.depletionAge;
+  if (data.stockAllocation !== undefined) {
+    document.getElementById('settAlloc').value = data.stockAllocation;
+    onAllocChange(document.getElementById('settAlloc'));
+  }
+  if (data.inflationRate !== undefined) document.getElementById('settInflation').value = data.inflationRate;
+  if (data.portfolioValue !== undefined) document.getElementById('portfolioValue').value = data.portfolioValue;
+  if (data.pensions) pensions = data.pensions;
+  renderPensions();
+  saveAndCalc();
+  hideImportModal();
+}
+
+function applyImportText() {
+  var text = document.getElementById('importText').value.trim();
+  if (!text) return;
+  try {
+    var data = JSON.parse(text);
+    applyImportData(data);
+  } catch(err) {
+    var m = document.getElementById('aboutModal');
+    m.querySelector('.modal-box').innerHTML =
+      '<h2>Import Error</h2><p>Invalid JSON. Make sure you pasted a valid VPW config.</p>' +
+      '<button class="modal-close-btn" id="modalCloseBtn">OK</button>';
+    m.classList.add('visible');
+    document.getElementById('modalCloseBtn').addEventListener('click', hideAbout);
+  }
+}
 
 function handleImportFile(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
     try {
       var data = JSON.parse(e.target.result);
-      if (data.age !== undefined) document.getElementById('settAge').value = data.age;
-      if (data.depletionAge !== undefined) document.getElementById('settDepletion').value = data.depletionAge;
-      if (data.stockAllocation !== undefined) {
-        document.getElementById('settAlloc').value = data.stockAllocation;
-        onAllocChange(document.getElementById('settAlloc'));
-      }
-      if (data.inflationRate !== undefined) document.getElementById('settInflation').value = data.inflationRate;
-      if (data.portfolioValue !== undefined) document.getElementById('portfolioValue').value = data.portfolioValue;
-      if (data.pensions) pensions = data.pensions;
-      renderPensions();
-      saveAndCalc();
+      applyImportData(data);
     } catch(err) {
       var m = document.getElementById('aboutModal');
       m.querySelector('.modal-box').innerHTML =
@@ -1136,6 +1167,14 @@ function init() {
   });
   document.getElementById('exportModal').addEventListener('click', function(e) {
     if (e.target === this) this.classList.remove('visible');
+  });
+  document.getElementById('importApplyBtn').addEventListener('click', applyImportText);
+  document.getElementById('importCancelBtn').addEventListener('click', hideImportModal);
+  document.getElementById('importFileBtn').addEventListener('click', function() {
+    document.getElementById('importFileInput').click();
+  });
+  document.getElementById('importModal').addEventListener('click', function(e) {
+    if (e.target === this) hideImportModal();
   });
   document.getElementById('importFileInput').addEventListener('change', function(e) {
     if (e.target.files && e.target.files[0]) {
