@@ -600,7 +600,8 @@ function calcVPWRate(realReturn, yearsRemaining) {
   if (realReturn === 0) return 1 / yearsRemaining;
   var r = realReturn;
   var n = yearsRemaining;
-  return r / (1 - Math.pow(1 + r, -n));
+  // Annuity-due (beginning of period) PMT factor
+  return r / ((1 + r) * (1 - Math.pow(1 + r, -n)));
 }
 
 function annuityDuePV(rate, n) {
@@ -775,7 +776,7 @@ function updateBadge(age, stockPct, rate) {
   document.getElementById('badgeAge').textContent = age;
   document.getElementById('badgeAlloc').textContent = stockPct;
   document.getElementById('badgeAllocBond').textContent = 100 - stockPct;
-  document.getElementById('badgeRate').textContent = rate.toFixed(1);
+  document.getElementById('badgeRate').textContent = rate.toFixed(3);
 }
 
 function formatCurrency(value) {
@@ -921,7 +922,7 @@ function renderDebugSection(containerId, title, bd) {
   html += '<div class="debug-summary-row">' +
     '<span class="label">VPW Withdrawal</span>' +
     '<span><span class="value">' + formatCurrency(bd.vpwWithdrawal) + '</span>' +
-    '<span class="note">x [A] ' + (bd.vpwRate * 100).toFixed(1) + '%</span></span></div>';
+    '<span class="note">x [A] ' + (bd.vpwRate * 100).toFixed(3) + '%</span></span></div>';
 
   if (bd.pensionDetails.length > 0) {
     html += '<div class="debug-summary-row">' +
