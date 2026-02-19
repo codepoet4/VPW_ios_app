@@ -290,26 +290,43 @@ body {
   text-transform: uppercase; letter-spacing: 0.3px;
 }
 
-.cushion-row {
-  display: flex; justify-content: space-between; align-items: baseline;
-  padding: 7px 0; border-bottom: 0.5px solid var(--separator);
-  font-size: 14px; color: var(--text2);
+.cushion-inputs {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; margin-bottom: 8px;
 }
-.cushion-row span:last-child { font-weight: 600; color: var(--text); }
-.cushion-total-row {
-  border-bottom: none; border-top: 1.5px solid var(--separator);
-  padding-top: 9px; font-weight: 700; color: var(--text);
+.ci-cell { text-align: center; padding: 4px 2px; }
+.ci-cell:not(:first-child) { border-left: 0.5px solid var(--separator); }
+.ci-label {
+  font-size: 9px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px;
 }
-.cushion-total-row span:last-child { color: var(--accent); }
-.cushion-monthly {
-  text-align: center; margin-top: 14px; padding-top: 14px;
+.ci-value { font-size: 13px; font-weight: 700; color: var(--text); }
+.cushion-new-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: 13px;
   border-top: 0.5px solid var(--separator);
+  border-bottom: 0.5px solid var(--separator);
 }
-.cushion-monthly-label {
-  font-size: 11px; font-weight: 600; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+.cushion-new-row span:first-child { color: var(--text2); }
+.cushion-new-row span:last-child { font-weight: 700; color: var(--accent); }
+.cushion-income-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 0.5px solid var(--separator);
 }
-.cushion-monthly-value { font-size: 36px; font-weight: 700; color: var(--green); }
+.cushion-monthly-value { font-size: 26px; font-weight: 700; color: var(--green); }
+.cushion-done-btn {
+  padding: 8px 10px; background: var(--accent); color: white;
+  border: none; border-radius: 10px; font-size: 11px; font-weight: 600;
+  font-family: inherit; cursor: pointer; text-align: center; line-height: 1.4;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation;
+  flex-shrink: 0;
+}
+.cushion-done-btn:active { opacity: 0.8; }
+.cushion-surplus-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 6px; font-size: 12px; color: var(--text3);
+}
+.surplus-pos { color: var(--green); font-weight: 700; }
+.surplus-neg { color: var(--red); font-weight: 700; }
 
 .account-list-name {
   font-size: 15px; font-weight: 600; color: var(--text);
@@ -616,25 +633,34 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
     <div class="card" id="cushionCard" style="display:none;">
       <div class="card-title">Income Cushion</div>
-      <div class="cushion-row">
-        <span>Current Cushion</span>
-        <span id="cushionCurrent">$0</span>
+      <div class="cushion-inputs">
+        <div class="ci-cell">
+          <div class="ci-label">Cushion</div>
+          <div class="ci-value" id="cushionCurrent">$0</div>
+        </div>
+        <div class="ci-cell">
+          <div class="ci-label">Portfolio (mo.)</div>
+          <div class="ci-value" id="cushionVPW">$0</div>
+        </div>
+        <div class="ci-cell">
+          <div class="ci-label">Pension (mo.)</div>
+          <div class="ci-value" id="cushionPension">$0</div>
+        </div>
       </div>
-      <div class="cushion-row">
-        <span>Portfolio Withdrawal (mo.)</span>
-        <span id="cushionVPW">$0</span>
-      </div>
-      <div class="cushion-row">
-        <span>Pension Income (mo.)</span>
-        <span id="cushionPension">$0</span>
-      </div>
-      <div class="cushion-row cushion-total-row">
+      <div class="cushion-new-row">
         <span>New Cushion</span>
         <span id="cushionNew">$0</span>
       </div>
-      <div class="cushion-monthly">
-        <div class="cushion-monthly-label">Monthly Income</div>
-        <div class="cushion-monthly-value" id="cushionMonthly">$0</div>
+      <div class="cushion-income-row">
+        <div>
+          <div class="ci-label" style="text-align:left;margin-bottom:3px;">Monthly Income (÷6)</div>
+          <div class="cushion-monthly-value" id="cushionMonthly">$0</div>
+        </div>
+        <button class="cushion-done-btn" id="cushionDoneBtn">Withdrawal<br>Completed</button>
+      </div>
+      <div class="cushion-surplus-row">
+        <span>vs. Portfolio + Pension</span>
+        <span id="cushionSurplus"></span>
       </div>
     </div>
 
@@ -1236,16 +1262,43 @@ function updateCushionSection() {
   if (!hasCushion) return;
 
   var cushionVal = getCushionValue();
-  var vpwMonthly = lastBd ? lastBd.vpwWithdrawal / 12 : 0;
+  // Use full portfolio withdrawal (VPW + bridged pensions)
+  var vpwMonthly = lastBd ? lastBd.portfolioWithdrawal / 12 : 0;
   var pensionMonthly = lastBd ? lastBd.receivingPayment / 12 : 0;
   var newCushion = cushionVal + vpwMonthly + pensionMonthly;
   var monthlyIncome = newCushion / 6;
+  var surplus = (vpwMonthly + pensionMonthly) - monthlyIncome;
 
   document.getElementById('cushionCurrent').textContent = formatCurrency(cushionVal);
   document.getElementById('cushionVPW').textContent = formatCurrency(vpwMonthly);
   document.getElementById('cushionPension').textContent = formatCurrency(pensionMonthly);
   document.getElementById('cushionNew').textContent = formatCurrency(newCushion);
   document.getElementById('cushionMonthly').textContent = formatCurrency(monthlyIncome);
+
+  var surplusEl = document.getElementById('cushionSurplus');
+  if (surplus >= 0) {
+    surplusEl.innerHTML = '<span class="surplus-pos">+' + formatCurrency(surplus) + '</span>';
+  } else {
+    surplusEl.innerHTML = '<span class="surplus-neg">-' + formatCurrency(Math.abs(surplus)) + '</span>';
+  }
+}
+
+function cushionWithdrawalDone() {
+  if (!lastBd) return;
+  var cushionIdx = -1;
+  for (var i = 0; i < accounts.length; i++) {
+    if (isCushion(accounts[i])) { cushionIdx = i; break; }
+  }
+  if (cushionIdx < 0) return;
+
+  var cushionVal = getCushionValue();
+  var vpwMonthly = lastBd.portfolioWithdrawal / 12;
+  var pensionMonthly = lastBd.receivingPayment / 12;
+  var newCushion = cushionVal + vpwMonthly + pensionMonthly;
+  var monthlyIncome = newCushion / 6;
+  accounts[cushionIdx].value = Math.max(0, Math.round(newCushion - monthlyIncome));
+  renderAccounts();
+  saveAndCalc();
 }
 
 function addPension(data) {
@@ -1519,6 +1572,7 @@ function init() {
   });
 
   document.getElementById('debugBtn').addEventListener('click', toggleDebug);
+  document.getElementById('cushionDoneBtn').addEventListener('click', cushionWithdrawalDone);
 
   document.getElementById('accountTypeGrid').addEventListener('click', function(e) {
     var btn = e.target.closest('[data-type]');
