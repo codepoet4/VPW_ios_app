@@ -276,6 +276,41 @@ body {
   padding: 10px 0; border-bottom: 0.5px solid var(--separator);
 }
 .account-list-row:last-child { border-bottom: none; }
+.account-list-row.is-cushion {
+  background: rgba(255,159,10,0.08); border-radius: 8px;
+  padding: 10px 8px; margin-bottom: 6px;
+  border: 0.5px solid rgba(255,159,10,0.3); border-bottom: 0.5px solid rgba(255,159,10,0.3);
+}
+.account-list-row.is-cushion .account-list-name { color: var(--orange); }
+.account-list-row.is-cushion .account-list-value { color: var(--orange); }
+.cushion-badge {
+  font-size: 9px; font-weight: 700; color: var(--orange);
+  background: rgba(255,159,10,0.15); border-radius: 4px;
+  padding: 2px 5px; white-space: nowrap; flex-shrink: 0;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+
+.cushion-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 7px 0; border-bottom: 0.5px solid var(--separator);
+  font-size: 14px; color: var(--text2);
+}
+.cushion-row span:last-child { font-weight: 600; color: var(--text); }
+.cushion-total-row {
+  border-bottom: none; border-top: 1.5px solid var(--separator);
+  padding-top: 9px; font-weight: 700; color: var(--text);
+}
+.cushion-total-row span:last-child { color: var(--accent); }
+.cushion-monthly {
+  text-align: center; margin-top: 14px; padding-top: 14px;
+  border-top: 0.5px solid var(--separator);
+}
+.cushion-monthly-label {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.cushion-monthly-value { font-size: 36px; font-weight: 700; color: var(--green); }
+
 .account-list-name {
   font-size: 15px; font-weight: 600; color: var(--text);
   border: none; background: transparent; outline: none;
@@ -579,6 +614,30 @@ input[type="range"]::-webkit-slider-thumb {
         <span class="portfolio-total-currency">$</span><span id="portfolioTotalDisplay">0</span>
       </div>
     </div>
+    <div class="card" id="cushionCard" style="display:none;">
+      <div class="card-title">Income Cushion</div>
+      <div class="cushion-row">
+        <span>Current Cushion</span>
+        <span id="cushionCurrent">$0</span>
+      </div>
+      <div class="cushion-row">
+        <span>Portfolio Withdrawal (mo.)</span>
+        <span id="cushionVPW">$0</span>
+      </div>
+      <div class="cushion-row">
+        <span>Pension Income (mo.)</span>
+        <span id="cushionPension">$0</span>
+      </div>
+      <div class="cushion-row cushion-total-row">
+        <span>New Cushion</span>
+        <span id="cushionNew">$0</span>
+      </div>
+      <div class="cushion-monthly">
+        <div class="cushion-monthly-label">Monthly Income</div>
+        <div class="cushion-monthly-value" id="cushionMonthly">$0</div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">Accounts</div>
       <div id="accountList"></div>
@@ -874,9 +933,11 @@ function calculate() {
   var portfolio = getPortfolioTotal();
 
   var bd = computeBreakdown(portfolio, age, depletion, stockPct, inflation);
+  lastBd = bd;
 
   updateBadge(age, stockPct, bd.vpwRate * 100);
   updateResults(bd);
+  updateCushionSection();
   document.getElementById('infoDepletion').textContent = depletion;
   document.getElementById('pensionIncomeCard').style.display =
     bd.hasReceiving ? 'block' : 'none';
@@ -1095,10 +1156,25 @@ var pensions = [];
 // ==========================================
 
 var accounts = [];
+var lastBd = null;
+
+function isCushion(a) {
+  return a.name.toLowerCase() === 'cushion';
+}
+
+function getCushionValue() {
+  var total = 0;
+  for (var i = 0; i < accounts.length; i++) {
+    if (isCushion(accounts[i])) total += accounts[i].value || 0;
+  }
+  return total;
+}
 
 function getPortfolioTotal() {
   var total = 0;
-  for (var i = 0; i < accounts.length; i++) total += accounts[i].value || 0;
+  for (var i = 0; i < accounts.length; i++) {
+    if (!isCushion(accounts[i])) total += accounts[i].value || 0;
+  }
   return total;
 }
 
@@ -1123,21 +1199,53 @@ function renderAccounts() {
   var container = document.getElementById('accountList');
   if (!container) return;
   container.innerHTML = '';
+  // Render cushion accounts first, then regular accounts
+  var order = [];
   for (var i = 0; i < accounts.length; i++) {
-    var a = accounts[i];
+    if (isCushion(accounts[i])) order.push(i);
+  }
+  for (var i = 0; i < accounts.length; i++) {
+    if (!isCushion(accounts[i])) order.push(i);
+  }
+
+  for (var k = 0; k < order.length; k++) {
+    var idx = order[k];
+    var a = accounts[idx];
+    var cushion = isCushion(a);
     var row = document.createElement('div');
-    row.className = 'account-list-row';
+    row.className = 'account-list-row' + (cushion ? ' is-cushion' : '');
     row.innerHTML =
       '<input type="text" class="account-list-name" value="' + escapeAttr(a.name) + '"' +
-      ' placeholder="Account name" data-acct-field="name" data-acct-index="' + i + '">' +
+      ' placeholder="Account name" data-acct-field="name" data-acct-index="' + idx + '">' +
+      (cushion ? '<span class="cushion-badge">not in total</span>' : '') +
       '<input type="text" class="account-list-value"' +
       ' value="' + (a.value > 0 ? Math.round(a.value).toLocaleString('en-US') : '') + '"' +
       ' inputmode="numeric" placeholder="$0"' +
-      ' data-acct-field="value" data-acct-index="' + i + '">' +
-      '<button class="delete-btn" data-acct-delete="' + i + '" aria-label="Delete">&times;</button>';
+      ' data-acct-field="value" data-acct-index="' + idx + '">' +
+      '<button class="delete-btn" data-acct-delete="' + idx + '" aria-label="Delete">&times;</button>';
     container.appendChild(row);
   }
   updatePortfolioTotal();
+}
+
+function updateCushionSection() {
+  var hasCushion = accounts.some(function(a) { return isCushion(a); });
+  var card = document.getElementById('cushionCard');
+  if (!card) return;
+  card.style.display = hasCushion ? 'block' : 'none';
+  if (!hasCushion) return;
+
+  var cushionVal = getCushionValue();
+  var vpwMonthly = lastBd ? lastBd.vpwWithdrawal / 12 : 0;
+  var pensionMonthly = lastBd ? lastBd.receivingPayment / 12 : 0;
+  var newCushion = cushionVal + vpwMonthly + pensionMonthly;
+  var monthlyIncome = newCushion / 6;
+
+  document.getElementById('cushionCurrent').textContent = formatCurrency(cushionVal);
+  document.getElementById('cushionVPW').textContent = formatCurrency(vpwMonthly);
+  document.getElementById('cushionPension').textContent = formatCurrency(pensionMonthly);
+  document.getElementById('cushionNew').textContent = formatCurrency(newCushion);
+  document.getElementById('cushionMonthly').textContent = formatCurrency(monthlyIncome);
 }
 
 function addPension(data) {
@@ -1234,6 +1342,7 @@ function switchTab(tab) {
     document.getElementById('tabPortfolio').classList.add('active');
     document.getElementById('page-portfolio').classList.add('active');
     renderAccounts();
+    updateCushionSection();
   } else {
     document.getElementById('tabSettings').classList.add('active');
     document.getElementById('page-settings').classList.add('active');
