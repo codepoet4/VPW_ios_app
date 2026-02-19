@@ -163,14 +163,22 @@ body {
 .portfolio-input:focus { border-color: var(--accent); }
 .portfolio-input::placeholder { color: #c7c7cc; font-weight: 400; }
 
-.vpw-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--accent-light);
-  padding: 8px 14px; border-radius: 20px;
-  font-size: 14px; font-weight: 600; color: var(--accent);
-  margin-top: 8px;
+.info-bar {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
 }
-.vpw-badge .rate { font-size: 18px; }
+.info-bar-cell {
+  text-align: center; padding: 6px 4px;
+}
+.info-bar-cell:not(:first-child) {
+  border-left: 0.5px solid var(--separator);
+}
+.info-bar-cell .ib-label {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.info-bar-cell .ib-value {
+  font-size: 17px; font-weight: 700; color: var(--accent);
+}
 
 .result-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
@@ -262,6 +270,23 @@ body {
   -webkit-appearance: none; appearance: none; touch-action: manipulation;
 }
 .account-type-btn:active { background: #d0e4fd; }
+
+.account-list-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0; border-bottom: 0.5px solid var(--separator);
+}
+.account-list-row:last-child { border-bottom: none; }
+.account-list-name {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  border: none; background: transparent; outline: none;
+  font-family: inherit; flex: 1; min-width: 0;
+}
+.account-list-name::placeholder { color: var(--text3); }
+.account-list-value {
+  font-size: 15px; font-weight: 600; text-align: right;
+  border: none; background: transparent; color: var(--accent);
+  outline: none; font-family: inherit; width: 110px; flex-shrink: 0;
+}
 
 .pension-card {
   background: var(--bg); border-radius: 12px;
@@ -486,13 +511,20 @@ input[type="range"]::-webkit-slider-thumb {
   <!-- CALCULATOR PAGE -->
   <div id="page-calc" class="page active">
 
-    <div class="card" style="padding: 12px 18px;">
-      <div class="vpw-badge" style="margin-top:0; justify-content:center;">
-        <span>Age <span id="badgeAge">65</span></span>
-        <span>|</span>
-        <span><span id="badgeAlloc">60</span>/<span id="badgeAllocBond">40</span></span>
-        <span>|</span>
-        <span>VPW Rate [A] = <span class="rate" id="badgeRate">0.0</span>%</span>
+    <div class="card" style="padding: 10px 14px;">
+      <div class="info-bar">
+        <div class="info-bar-cell">
+          <div class="ib-label">Age</div>
+          <div class="ib-value" id="badgeAge">65</div>
+        </div>
+        <div class="info-bar-cell">
+          <div class="ib-label">Allocation</div>
+          <div class="ib-value"><span id="badgeAlloc">60</span>/<span id="badgeAllocBond">40</span></div>
+        </div>
+        <div class="info-bar-cell">
+          <div class="ib-label">VPW Rate</div>
+          <div class="ib-value"><span id="badgeRate">0.000</span>%</div>
+        </div>
       </div>
     </div>
 
@@ -1093,22 +1125,17 @@ function renderAccounts() {
   container.innerHTML = '';
   for (var i = 0; i < accounts.length; i++) {
     var a = accounts[i];
-    var card = document.createElement('div');
-    card.className = 'account-card';
-    card.innerHTML =
-      '<div class="account-header">' +
-        '<input type="text" class="account-name-input" value="' + escapeAttr(a.name) + '"' +
-        ' placeholder="Account name" data-acct-field="name" data-acct-index="' + i + '">' +
-        '<button class="delete-btn" data-acct-delete="' + i + '" aria-label="Delete">&times;</button>' +
-      '</div>' +
-      '<div class="account-row">' +
-        '<label>Value ($)</label>' +
-        '<input type="text" class="account-value-input"' +
-        ' value="' + (a.value > 0 ? Math.round(a.value).toLocaleString('en-US') : '') + '"' +
-        ' inputmode="numeric" placeholder="0"' +
-        ' data-acct-field="value" data-acct-index="' + i + '">' +
-      '</div>';
-    container.appendChild(card);
+    var row = document.createElement('div');
+    row.className = 'account-list-row';
+    row.innerHTML =
+      '<input type="text" class="account-list-name" value="' + escapeAttr(a.name) + '"' +
+      ' placeholder="Account name" data-acct-field="name" data-acct-index="' + i + '">' +
+      '<input type="text" class="account-list-value"' +
+      ' value="' + (a.value > 0 ? Math.round(a.value).toLocaleString('en-US') : '') + '"' +
+      ' inputmode="numeric" placeholder="$0"' +
+      ' data-acct-field="value" data-acct-index="' + i + '">' +
+      '<button class="delete-btn" data-acct-delete="' + i + '" aria-label="Delete">&times;</button>';
+    container.appendChild(row);
   }
   updatePortfolioTotal();
 }
