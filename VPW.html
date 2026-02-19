@@ -24,6 +24,29 @@
   --radius: 14px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1c1c1e;
+    --accent: #0a84ff;
+    --accent-light: #0a2540;
+    --green: #30d158;
+    --green-bg: #0d2a18;
+    --orange: #ff9f0a;
+    --red: #ff453a;
+    --text: #ffffff;
+    --text2: #ebebf5;
+    --text3: #8e8e93;
+    --separator: #38383a;
+  }
+  .header {
+    background: rgba(28,28,30,0.85);
+  }
+  .debug-loss-input-row input {
+    background: var(--card);
+  }
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
