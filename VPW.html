@@ -197,6 +197,49 @@ body {
   letter-spacing: 0.3px; font-weight: 600;
 }
 
+.portfolio-total-card { text-align: center; }
+.portfolio-total-label {
+  font-size: 13px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+}
+.portfolio-total-amount { font-size: 38px; font-weight: 700; color: var(--text); }
+.portfolio-total-currency {
+  font-size: 24px; font-weight: 300; color: var(--text3);
+  vertical-align: top; margin-right: 2px; line-height: 1.4;
+}
+.account-card {
+  background: var(--bg); border-radius: 12px;
+  padding: 14px; margin-bottom: 10px;
+}
+.account-card .account-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 8px;
+}
+.account-name-input {
+  font-size: 16px; font-weight: 600; border: none;
+  background: transparent; color: var(--text); outline: none;
+  width: 70%; font-family: inherit;
+}
+.account-name-input::placeholder { color: var(--text3); }
+.account-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-top: 0.5px solid var(--separator);
+}
+.account-row label { font-size: 15px; color: var(--text2); }
+.account-value-input {
+  font-size: 16px; font-weight: 600; text-align: right;
+  border: none; background: transparent; color: var(--accent);
+  outline: none; font-family: inherit; width: 160px;
+}
+.account-type-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.account-type-btn {
+  padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  background: var(--accent-light); color: var(--accent); border: none;
+  cursor: pointer; font-family: inherit;
+  -webkit-appearance: none; appearance: none; touch-action: manipulation;
+}
+.account-type-btn:active { background: #d0e4fd; }
+
 .pension-card {
   background: var(--bg); border-radius: 12px;
   padding: 14px; margin-bottom: 10px; position: relative;
@@ -411,6 +454,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 <div class="tabs">
   <button class="tab-btn active" id="tabCalc">Calculator</button>
+  <button class="tab-btn" id="tabPortfolio">Portfolio</button>
   <button class="tab-btn" id="tabSettings">Settings</button>
 </div>
 
@@ -419,14 +463,8 @@ input[type="range"]::-webkit-slider-thumb {
   <!-- CALCULATOR PAGE -->
   <div id="page-calc" class="page active">
 
-    <div class="card">
-      <div class="card-title">Portfolio Value</div>
-      <div class="portfolio-input-wrap">
-        <span class="currency">$</span>
-        <input type="text" class="portfolio-input" id="portfolioValue"
-               inputmode="numeric" placeholder="0">
-      </div>
-      <div class="vpw-badge">
+    <div class="card" style="padding: 12px 18px;">
+      <div class="vpw-badge" style="margin-top:0; justify-content:center;">
         <span>Age <span id="badgeAge">65</span></span>
         <span>|</span>
         <span><span id="badgeAlloc">60</span>/<span id="badgeAllocBond">40</span></span>
@@ -476,6 +514,34 @@ input[type="range"]::-webkit-slider-thumb {
       <div id="debugLoss" class="debug-section loss-section"></div>
     </div>
 
+  </div>
+
+  <!-- PORTFOLIO PAGE -->
+  <div id="page-portfolio" class="page">
+    <div class="card portfolio-total-card">
+      <div class="portfolio-total-label">Total Portfolio</div>
+      <div class="portfolio-total-amount">
+        <span class="portfolio-total-currency">$</span><span id="portfolioTotalDisplay">0</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Accounts</div>
+      <div id="accountList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Add Account</div>
+      <div class="account-type-grid" id="accountTypeGrid">
+        <button class="account-type-btn" data-type="TFSA">TFSA</button>
+        <button class="account-type-btn" data-type="RRSP">RRSP</button>
+        <button class="account-type-btn" data-type="RRIF">RRIF</button>
+        <button class="account-type-btn" data-type="LIF">LIF</button>
+        <button class="account-type-btn" data-type="LIRA">LIRA</button>
+        <button class="account-type-btn" data-type="Cash">Cash</button>
+        <button class="account-type-btn" data-type="Joint Cash">Joint Cash</button>
+        <button class="account-type-btn" data-type="Non-Reg">Non-Reg</button>
+        <button class="account-type-btn" data-type="Other">Other</button>
+      </div>
+    </div>
   </div>
 
   <!-- SETTINGS PAGE -->
@@ -750,8 +816,7 @@ function calculate() {
   var stockPct = parseInt(document.getElementById('settAlloc').value) || 60;
   var inflation = parseFloat(document.getElementById('settInflation').value) / 100 || 0.025;
 
-  var portfolioStr = document.getElementById('portfolioValue').value.replace(/[^0-9.]/g, '');
-  var portfolio = parseFloat(portfolioStr) || 0;
+  var portfolio = getPortfolioTotal();
 
   var bd = computeBreakdown(portfolio, age, depletion, stockPct, inflation);
 
@@ -788,8 +853,7 @@ function formatPct(value) {
 }
 
 function updateResults(bd) {
-  var portfolioStr = document.getElementById('portfolioValue').value.replace(/[^0-9.]/g, '');
-  var hasValue = parseFloat(portfolioStr) > 0 || pensions.length > 0;
+  var hasValue = getPortfolioTotal() > 0 || pensions.length > 0;
 
   var ids = ['pwMonthly','pwQuarterly','pwAnnually','piMonthly','piQuarterly','piAnnually',
      'tiMonthly','tiQuarterly','tiAnnually'];
@@ -971,6 +1035,61 @@ function toggleDebug() {
 
 var pensions = [];
 
+// ==========================================
+// Account Management
+// ==========================================
+
+var accounts = [];
+
+function getPortfolioTotal() {
+  var total = 0;
+  for (var i = 0; i < accounts.length; i++) total += accounts[i].value || 0;
+  return total;
+}
+
+function updatePortfolioTotal() {
+  var el = document.getElementById('portfolioTotalDisplay');
+  if (el) el.textContent = Math.round(getPortfolioTotal()).toLocaleString('en-US');
+}
+
+function addAccount(type) {
+  accounts.push({ name: type, value: 0 });
+  renderAccounts();
+  saveAndCalc();
+}
+
+function removeAccount(index) {
+  accounts.splice(index, 1);
+  renderAccounts();
+  saveAndCalc();
+}
+
+function renderAccounts() {
+  var container = document.getElementById('accountList');
+  if (!container) return;
+  container.innerHTML = '';
+  for (var i = 0; i < accounts.length; i++) {
+    var a = accounts[i];
+    var card = document.createElement('div');
+    card.className = 'account-card';
+    card.innerHTML =
+      '<div class="account-header">' +
+        '<input type="text" class="account-name-input" value="' + escapeAttr(a.name) + '"' +
+        ' placeholder="Account name" data-acct-field="name" data-acct-index="' + i + '">' +
+        '<button class="delete-btn" data-acct-delete="' + i + '" aria-label="Delete">&times;</button>' +
+      '</div>' +
+      '<div class="account-row">' +
+        '<label>Value ($)</label>' +
+        '<input type="text" class="account-value-input"' +
+        ' value="' + (a.value > 0 ? Math.round(a.value).toLocaleString('en-US') : '') + '"' +
+        ' inputmode="numeric" placeholder="0"' +
+        ' data-acct-field="value" data-acct-index="' + i + '">' +
+      '</div>';
+    container.appendChild(card);
+  }
+  updatePortfolioTotal();
+}
+
 function addPension(data) {
   var pension = data || {
     name: 'Pension ' + (pensions.length + 1),
@@ -1061,6 +1180,10 @@ function switchTab(tab) {
     document.getElementById('tabCalc').classList.add('active');
     document.getElementById('page-calc').classList.add('active');
     calculate();
+  } else if (tab === 'portfolio') {
+    document.getElementById('tabPortfolio').classList.add('active');
+    document.getElementById('page-portfolio').classList.add('active');
+    renderAccounts();
   } else {
     document.getElementById('tabSettings').classList.add('active');
     document.getElementById('page-settings').classList.add('active');
@@ -1074,15 +1197,6 @@ function onAllocChange(slider) {
   slider.style.setProperty('--pct', val + '%');
 }
 
-function onPortfolioInput(input) {
-  var raw = input.value.replace(/[^0-9]/g, '');
-  if (raw.length > 0) {
-    input.value = parseInt(raw, 10).toLocaleString('en-US');
-  } else {
-    input.value = '';
-  }
-  saveAndCalc();
-}
 
 function saveAndCalc() { saveSettings(); calculate(); }
 
@@ -1099,7 +1213,7 @@ function saveSettings() {
     depletion: document.getElementById('settDepletion').value,
     alloc: document.getElementById('settAlloc').value,
     inflation: document.getElementById('settInflation').value,
-    portfolio: document.getElementById('portfolioValue').value,
+    accounts: accounts,
     pensions: pensions
   };
   try { localStorage.setItem('vpw-settings', JSON.stringify(settings)); } catch(e) {}
@@ -1117,7 +1231,13 @@ function loadSettings() {
       onAllocChange(document.getElementById('settAlloc'));
     }
     if (data.inflation) document.getElementById('settInflation').value = data.inflation;
-    if (data.portfolio) document.getElementById('portfolioValue').value = data.portfolio;
+    if (data.accounts) {
+      accounts = data.accounts;
+    } else if (data.portfolio && accounts.length === 0) {
+      // Migrate old single portfolio value to a Cash account
+      var val = parseInt(String(data.portfolio).replace(/[^0-9]/g, ''), 10) || 0;
+      if (val > 0) accounts = [{ name: 'Cash', value: val }];
+    }
     if (data.pensions) pensions = data.pensions;
   } catch(e) {}
 }
@@ -1132,7 +1252,7 @@ function exportConfig() {
     depletionAge: parseInt(document.getElementById('settDepletion').value) || 100,
     stockAllocation: parseInt(document.getElementById('settAlloc').value) || 60,
     inflationRate: parseFloat(document.getElementById('settInflation').value) || 2.5,
-    portfolioValue: document.getElementById('portfolioValue').value,
+    accounts: accounts,
     pensions: pensions
   };
   document.getElementById('exportText').value = JSON.stringify(settings, null, 2);
@@ -1172,7 +1292,7 @@ function applyImportData(data) {
     onAllocChange(document.getElementById('settAlloc'));
   }
   if (data.inflationRate !== undefined) document.getElementById('settInflation').value = data.inflationRate;
-  if (data.portfolioValue !== undefined) document.getElementById('portfolioValue').value = data.portfolioValue;
+  if (data.accounts) { accounts = data.accounts; renderAccounts(); }
   if (data.pensions) pensions = data.pensions;
   renderPensions();
   saveAndCalc();
@@ -1220,6 +1340,7 @@ function handleImportFile(file) {
 function init() {
   loadSettings();
   renderPensions();
+  renderAccounts();
   onAllocChange(document.getElementById('settAlloc'));
 
   document.getElementById('headerTitle').addEventListener('click', function() {
@@ -1229,6 +1350,7 @@ function init() {
   });
 
   document.getElementById('tabCalc').addEventListener('click', function() { switchTab('calc'); });
+  document.getElementById('tabPortfolio').addEventListener('click', function() { switchTab('portfolio'); });
   document.getElementById('tabSettings').addEventListener('click', function() { switchTab('settings'); });
 
   document.getElementById('aboutBtn').addEventListener('click', showAbout);
@@ -1239,11 +1361,31 @@ function init() {
 
   document.getElementById('debugBtn').addEventListener('click', toggleDebug);
 
-  var portfolioInput = document.getElementById('portfolioValue');
-  portfolioInput.addEventListener('input', function() { onPortfolioInput(this); });
-  portfolioInput.addEventListener('blur', function() {
-    var raw = this.value.replace(/[^0-9]/g, '');
-    if (raw.length > 0) this.value = parseInt(raw, 10).toLocaleString('en-US');
+  document.getElementById('accountTypeGrid').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-type]');
+    if (btn) addAccount(btn.getAttribute('data-type'));
+  });
+
+  document.getElementById('accountList').addEventListener('click', function(e) {
+    var delBtn = e.target.closest('[data-acct-delete]');
+    if (delBtn) removeAccount(parseInt(delBtn.getAttribute('data-acct-delete'), 10));
+  });
+
+  document.getElementById('accountList').addEventListener('change', function(e) {
+    var input = e.target;
+    var idx = parseInt(input.getAttribute('data-acct-index'), 10);
+    var field = input.getAttribute('data-acct-field');
+    if (isNaN(idx) || !field) return;
+    if (field === 'value') {
+      var val = parseInt(input.value.replace(/[^0-9]/g, ''), 10) || 0;
+      accounts[idx].value = val;
+      input.value = val > 0 ? val.toLocaleString('en-US') : '';
+      saveAndCalc();
+      updatePortfolioTotal();
+    } else if (field === 'name') {
+      accounts[idx].name = input.value;
+      saveAndCalc();
+    }
   });
 
   document.getElementById('settAge').addEventListener('change', saveAndCalc);
