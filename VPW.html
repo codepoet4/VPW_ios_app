@@ -659,7 +659,7 @@ input[type="range"]::-webkit-slider-thumb {
         <button class="cushion-done-btn" id="cushionDoneBtn">Withdrawal<br>Completed</button>
       </div>
       <div class="cushion-surplus-row">
-        <span>vs. Portfolio + Pension</span>
+        <span id="cushionSurplusLabel"></span>
         <span id="cushionSurplus"></span>
       </div>
     </div>
@@ -1276,10 +1276,13 @@ function updateCushionSection() {
   document.getElementById('cushionMonthly').textContent = formatCurrency(monthlyIncome);
 
   var surplusEl = document.getElementById('cushionSurplus');
+  var labelEl = document.getElementById('cushionSurplusLabel');
   if (surplus >= 0) {
+    if (labelEl) labelEl.textContent = 'Add to Cushion';
     surplusEl.innerHTML = '<span class="surplus-pos">+' + formatCurrency(surplus) + '</span>';
   } else {
-    surplusEl.innerHTML = '<span class="surplus-neg">-' + formatCurrency(Math.abs(surplus)) + '</span>';
+    if (labelEl) labelEl.textContent = 'Remove from Cushion';
+    surplusEl.innerHTML = '<span class="surplus-neg">' + formatCurrency(Math.abs(surplus)) + '</span>';
   }
 }
 
